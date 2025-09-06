@@ -112,9 +112,9 @@
         
         .note {
             position: absolute;
-            width: 20%;
+            width: 90%;
             height: 40px;
-            left: 2.5%;
+            left: 5%;
             background: linear-gradient(45deg, #FF0080, #00FFFF);
             border-radius: 8px;
             box-shadow: 0 0 20px #FF0080;
@@ -631,7 +631,8 @@
                     <button class="modal-btn" onclick="watchAdToContinue()">🎬 WATCH AD TO CONTINUE</button><br>
                     <button class="share-btn modal-btn" onclick="shareScore()">�� SHARE SCORE</button>
                     <button class="share-btn modal-btn" onclick="copyViralMessage()">📋 COPY MESSAGE</button><br>
-                    <button class="menu-btn-modal modal-btn" onclick="location.reload();">🏠 MENU</button>                </div>
+                    <button class="menu-btn-modal modal-btn" onclick="restartGame(); this.closest('.game-over-modal').remove();">🔄 NEW GAME</button>
+                </div>
             `;
             document.body.appendChild(modal);
         }
@@ -648,23 +649,6 @@
                     // Grant reward: restore 2 lives
                     gameState.lives = 2;
                     gameState.gameActive = true;
-                    
-                    // Clear previous notes
-                    gameState.notes.forEach(note => {
-                        if (note.element && note.element.parentNode) {
-                            note.element.parentNode.removeChild(note.element);
-                        }
-                    });
-                    gameState.notes = [];
-                    
-                    // Reset spawn timer
-                    gameState.lastSpawn = Date.now();
-                    
-                    // Restart game loop
-                    console.log("STARTING GAMELOOP!");
-            gameLoop();
-                    setupControls();
-                    startKPopBeat();
                     updateUI();
                     
                     document.querySelector('.game-over-modal').remove();
@@ -740,8 +724,6 @@
 
         // ========== CONTROLS ==========
         function setupControls() {
-            if (controlsSetup) return;
-            controlsSetup = true;
             const touchZones = document.querySelectorAll('.touch-zone');
             
             touchZones.forEach((zone) => {
@@ -762,14 +744,16 @@
         // ========== GAME LOOP ==========
         function gameLoop() {
             if (!gameState.gameActive) return;
-            // FORCE SPAWN - Frame Counter
-            gameState.frameCount = (gameState.frameCount || 0) + 1;
-            if (gameState.frameCount >= 48) {
-                console.log("FORCE SPAWN FRAME:", gameState.frameCount);
+            
+            // Spawn notes
+            const now = Date.now();
+            if (now - gameState.lastSpawn > gameState.spawnInterval) {
                 spawnNote();
-                gameState.frameCount = 0;
-            }            
-            updateNotes();            requestAnimationFrame(gameLoop);
+                gameState.lastSpawn = now;
+            }
+            
+            updateNotes();
+            requestAnimationFrame(gameLoop);
         }
 
         // ========== INITIALIZATION ==========
@@ -779,9 +763,6 @@
             gameState.combo = 0;
             gameState.lives = 3;
             gameState.notes = [];
-                    
-                    // Reset spawn timer
-                    gameState.lastSpawn = Date.now();
             gameState.perfectHits = 0;
             gameState.lastSpawn = Date.now();
             gameState.spawnInterval = 800;
@@ -789,8 +770,8 @@
             
             document.querySelectorAll('.note').forEach(note => note.remove());
             updateUI();
-            console.log("STARTING GAMELOOP!");
             gameLoop();
+            startKPopBeat();
         }
         
         function restartGame() {

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Beat Stage - K-pop Rhythm Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(145deg, #0a0a0a, #1a1a2e);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ui-top {
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 2px solid #00FFFF;
+        }
+        
+        .score-display {
+            color: #FFFF00;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 20px #FFFF00;
+        }
+        
+        .combo-display {
+            color: #FF0080;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #FF0080;
+        }
+        
+        .menu-btn {
+            background: linear-gradient(45deg, #FF0080, #00FFFF);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .game-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .lane {
+            width: 25%;
+            height: 100%;
+            position: relative;
+            border-right: 2px solid rgba(0, 255, 255, 0.3);
+            background: linear-gradient(180deg, 
+                transparent 0%, 
+                rgba(255, 0, 128, 0.05) 80%, 
+                rgba(255, 0, 128, 0.2) 100%
+            );
+        }
+        
+        .lane:last-child {
+            border-right: none;
+        }
+        
+        .hit-line {
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #FF0080, #00FFFF, #FFFF00, #FF0080);
+            box-shadow: 0 0 20px #FFFF00;
+            z-index: 10;
+        }
+        
+        .touch-zone {
+            position: absolute;
+            bottom: 0;
+            width: 25%;
+            height: 150px;
+            background: rgba(0, 255, 255, 0.02);
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            z-index: 20;
+            transition: all 0.1s ease;
+        }
+        
+        .touch-zone:nth-child(1) { left: 0%; }
+        .touch-zone:nth-child(2) { left: 25%; }
+        .touch-zone:nth-child(3) { left: 50%; }
+        .touch-zone:nth-child(4) { left: 75%; }
+        
+        .touch-zone:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(0.98);
+        }
+        
+        .note {
+            position: absolute;
+            width: 80%;
+            height: 30px;
+            left: 10%;
+            background: linear-gradient(45deg, #FF0080, #00FFFF);
+            border-radius: 15px;
+            box-shadow: 0 0 15px #FF0080;
+            z-index: 15;
+            animation: noteGlow 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes noteGlow {
+            0% { box-shadow: 0 0 15px #FF0080; }
+            100% { box-shadow: 0 0 25px #00FFFF, 0 0 35px #FF0080; }
+        }
+        
+        .hit-effect {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #FFFF00, #FF0080);
+            z-index: 25;
+            pointer-events: none;
+            animation: hitBlast 0.6s ease-out forwards;
+        }
+        
+        @keyframes hitBlast {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        
+        .combo-text {
+            position: absolute;
+            font-size: 28px;
+            font-weight: bold;
+            color: #FFFF00;
+            text-shadow: 0 0 20px #FFFF00;
+            z-index: 30;
+            pointer-events: none;
+            animation: comboFloat 1s ease-out forwards;
+        }
+        
+        @keyframes comboFloat {
+            0% { transform: scale(0.5); opacity: 0; }
+            20% { transform: scale(1.2); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+        
+        @media (max-width: 768px) {
+            .ui-top {
+                height: 60px;
+                padding: 0 10px;
+            }
+            
+            .score-display {
+                font-size: 18px;
+            }
+            
+            .combo-display {
+                font-size: 16px;
+            }
+            
+            .menu-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+            
+            .hit-line {
+                bottom: 80px;
+            }
+            
+            .touch-zone {
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="ui-top">
+            <div class="score-display">SCORE: <span id="score">0</span></div>
+            <div class="combo-display">COMBO: <span id="combo">0</span></div>
+            <button class="menu-btn" onclick="showMenu()">🏠 MENU</button>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="lane"></div>
+            <div class="lane"></div>
+            <div class="lane"></div>
+            <div class="lane"></div>
+            
+            <div class="hit-line"></div>
+            
+            <div class="touch-zone" data-lane="0"></div>
+            <div class="touch-zone" data-lane="1"></div>
+            <div class="touch-zone" data-lane="2"></div>
+            <div class="touch-zone" data-lane="3"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== GAME STATE ==========
+        const gameState = {
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            notes: [],
+            gameActive: true,
+            noteSpeed: 3,
+            lastSpawn: 0,
+            spawnInterval: 1000
+        };
+
+        // ========== AUDIO SYSTEM ==========
+        let audioContext = null;
+        
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        function playHitSound(lane) {
+            if (!audioContext) return;
+            
+            try {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                // Different frequencies for each lane (pentatonic scale)
+                const frequencies = [440, 523, 659, 784]; // A, C, E, G
+                osc.frequency.value = frequencies[lane];
+                osc.type = 'sine';
+                
+                gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                // Audio error, ignore
+            }
+        }
+
+        // ========== NOTE SYSTEM ==========
+        function spawnNote() {
+            if (!gameState.gameActive) return;
+            
+            const lane = Math.floor(Math.random() * 4);
+            const gameArea = document.getElementById('gameArea');
+            
+            const note = document.createElement('div');
+            note.className = 'note';
+            note.style.left = (lane * 25 + 10) + '%';
+            note.style.top = '0px';
+            note.dataset.lane = lane;
+            note.dataset.startTime = Date.now();
+            
+            gameArea.appendChild(note);
+            gameState.notes.push({
+                element: note,
+                lane: lane,
+                y: 0
+            });
+        }
+        
+        function updateNotes() {
+            const gameArea = document.getElementById('gameArea');
+            const gameHeight = gameArea.offsetHeight;
+            const hitLineY = gameHeight - 100;
+            
+            gameState.notes = gameState.notes.filter(note => {
+                note.y += gameState.noteSpeed;
+                note.element.style.top = note.y + 'px';
+                
+                // Remove notes that are too far down
+                if (note.y > gameHeight + 50) {
+                    note.element.remove();
+                    return false;
+                }
+                
+                // Check for missed notes
+                if (note.y > hitLineY + 50) {
+                    // Miss
+                    gameState.combo = 0;
+                    updateUI();
+                    note.element.remove();
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        // ========== INPUT SYSTEM ==========
+        function handleInput(lane) {
+            const hitLineY = document.getElementById('gameArea').offsetHeight - 100;
+            let hitNote = null;
+            let bestDistance = Infinity;
+            
+            // Find closest note in this lane
+            gameState.notes.forEach(note => {
+                if (note.lane === lane) {
+                    const distance = Math.abs(note.y - hitLineY);
+                    if (distance < bestDistance && distance < 80) {
+                        bestDistance = distance;
+                        hitNote = note;
+                    }
+                }
+            });
+            
+            if (hitNote) {
+                // Hit!
+                gameState.score += 100 + (gameState.combo * 10);
+                gameState.combo++;
+                if (gameState.combo > gameState.maxCombo) {
+                    gameState.maxCombo = gameState.combo;
+                }
+                
+                // Remove note
+                hitNote.element.remove();
+                gameState.notes = gameState.notes.filter(n => n !== hitNote);
+                
+                // Effects
+                createHitEffect(lane);
+                playHitSound(lane);
+                
+                // Combo text
+                if (gameState.combo > 1) {
+                    createComboText(lane);
+                }
+                
+                updateUI();
+            } else {
+                // Miss
+                gameState.combo = 0;
+                updateUI();
+            }
+        }
+        
+        function createHitEffect(lane) {
+            const gameArea = document.getElementById('gameArea');
+            const effect = document.createElement('div');
+            effect.className = 'hit-effect';
+            effect.style.left = (lane * 25 + 12.5) + '%';
+            effect.style.bottom = '80px';
+            effect.style.transform = 'translateX(-50%)';
+            
+            gameArea.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 600);
+        }
+        
+        function createComboText(lane) {
+            const gameArea = document.getElementById('gameArea');
+            const text = document.createElement('div');
+            text.className = 'combo-text';
+            text.style.left = (lane * 25 + 12.5) + '%';
+            text.style.bottom = '120px';
+            text.style.transform = 'translateX(-50%)';
+            text.textContent = `COMBO x${gameState.combo}`;
+            
+            if (gameState.combo >= 20) {
+                text.style.color = '#FF0080';
+                text.textContent = `🔥 COMBO x${gameState.combo} 🔥`;
+            } else if (gameState.combo >= 10) {
+                text.style.color = '#00FFFF';
+                text.textContent = `⚡ COMBO x${gameState.combo}`;
+            }
+            
+            gameArea.appendChild(text);
+            
+            setTimeout(() => {
+                text.remove();
+            }, 1000);
+        }
+
+        // ========== UI SYSTEM ==========
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('combo').textContent = gameState.combo;
+            
+            // Color changes based on combo
+            const comboElement = document.getElementById('combo');
+            if (gameState.combo >= 20) {
+                comboElement.style.color = '#FF0080';
+                comboElement.style.textShadow = '0 0 20px #FF0080';
+            } else if (gameState.combo >= 10) {
+                comboElement.style.color = '#00FFFF';
+                comboElement.style.textShadow = '0 0 15px #00FFFF';
+            } else {
+                comboElement.style.color = '#FFFF00';
+                comboElement.style.textShadow = '0 0 10px #FFFF00';
+            }
+        }
+
+        // ========== TOUCH CONTROLS ==========
+        function setupControls() {
+            const touchZones = document.querySelectorAll('.touch-zone');
+            
+            touchZones.forEach((zone, index) => {
+                const lane = parseInt(zone.dataset.lane);
+                
+                // Touch events
+                zone.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleInput(lane);
+                }, { passive: false });
+                
+                // Click events (desktop)
+                zone.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    handleInput(lane);
+                });
+            });
+        }
+
+        // ========== GAME LOOP ==========
+        function gameLoop() {
+            if (!gameState.gameActive) return;
+            
+            // Spawn notes
+            const now = Date.now();
+            if (now - gameState.lastSpawn > gameState.spawnInterval) {
+                spawnNote();
+                gameState.lastSpawn = now;
+                
+                // Increase difficulty slightly
+                if (gameState.spawnInterval > 400) {
+                    gameState.spawnInterval -= 1;
+                }
+            }
+            
+            // Update notes
+            updateNotes();
+            
+            // Continue loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ========== INITIALIZATION ==========
+        function startGame() {
+            gameState.gameActive = true;
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.notes = [];
+            gameState.lastSpawn = Date.now();
+            
+            // Clear existing notes
+            document.querySelectorAll('.note').forEach(note => note.remove());
+            
+            updateUI();
+            gameLoop();
+        }
+        
+        function showMenu() {
+            alert('Menu functionality would go here');
+        }
+
+        // ========== START ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initAudio();
+            setupControls();
+            startGame();
+        });
+    </script>
+</body>
+</html>
