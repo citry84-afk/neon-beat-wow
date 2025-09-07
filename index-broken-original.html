@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Beat Stage - K-pop Rhythm Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(145deg, #0a0a0a, #1a1a2e);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ui-top {
+            height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            background: rgba(0,0,0,0.8);
+            border-bottom: 2px solid #00FFFF;
+        }
+        
+        .score-lives {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .score-display {
+            color: #FFFF00;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #FFFF00;
+        }
+        
+        .lives-display {
+            color: #FF0080;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .combo-display {
+            color: #00FFFF;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00FFFF;
+        }
+        
+        .menu-btn {
+            background: linear-gradient(45deg, #FF0080, #00FFFF);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .game-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .lane {
+            width: 25%;
+            height: 100%;
+            position: relative;
+            border-right: 1px solid rgba(0, 255, 255, 0.3);
+            background: linear-gradient(180deg, 
+                transparent 0%, 
+                rgba(255, 0, 128, 0.05) 85%, 
+                rgba(255, 0, 128, 0.15) 100%
+            );
+        }
+        
+        .lane:last-child {
+            border-right: none;
+        }
+        
+        .hit-line {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF0080, #00FFFF, #FFFF00, #FF0080);
+            box-shadow: 0 0 25px #FFFF00;
+            z-index: 10;
+        }
+        
+        .note {
+            position: absolute;
+            width: 20%;
+            height: 40px;
+            left: 2.5%;
+            background: linear-gradient(45deg, #FF0080, #00FFFF);
+            border-radius: 8px;
+            box-shadow: 0 0 20px #FF0080;
+            z-index: 15;
+            border: 2px solid #FFFFFF;
+        }
+        
+        .touch-zone {
+            position: absolute;
+            bottom: 0;
+            width: 25%;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 20;
+            transition: all 0.1s ease;
+        }
+        
+        .touch-zone:nth-child(6) { left: 0%; }
+        .touch-zone:nth-child(7) { left: 25%; }
+        .touch-zone:nth-child(8) { left: 50%; }
+        .touch-zone:nth-child(9) { left: 75%; }
+        
+        .touch-zone:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .hit-effect {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #FFFF00, #FF0080);
+            z-index: 25;
+            pointer-events: none;
+            animation: hitBlast 0.8s ease-out forwards;
+        }
+        
+        @keyframes hitBlast {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        
+        .combo-text {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFF00;
+            text-shadow: 0 0 20px #FFFF00;
+            z-index: 30;
+            pointer-events: none;
+            animation: comboFloat 1.2s ease-out forwards;
+        }
+        
+        @keyframes comboFloat {
+            0% { transform: scale(0.5); opacity: 0; }
+            20% { transform: scale(1.1); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1); opacity: 0; }
+        }
+        
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 350px;
+            border: 2px solid #00FFFF;
+            box-shadow: 0 0 40px rgba(0,255,255,0.5);
+        }
+        
+        .modal-title {
+            color: #FF0080;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #FF0080;
+        }
+        
+        .modal-stats {
+            color: #00FFFF;
+            margin-bottom: 25px;
+            font-size: 18px;
+        }
+        
+        .modal-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            border: none;
+            padding: 15px 25px;
+            margin: 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: 'Orbitron', monospace;
+            box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+        }
+        
+        .share-btn {
+            background: linear-gradient(45deg, #FF0080, #00FFFF);
+            color: white;
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+        
+        .menu-btn-modal {
+            background: #333;
+            color: white;
+            border: 2px solid #00FFFF;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .ui-top {
+                height: 60px;
+                padding: 0 10px;
+            }
+            
+            .score-display, .combo-display, .lives-display {
+                font-size: 16px;
+            }
+            
+            .menu-btn {
+                padding: 6px 12px;
+                font-size: 10px;
+            }
+            
+            .hit-line {
+                bottom: 70px;
+            }
+            
+            .touch-zone {
+                height: 120px;
+            }
+            
+            .note {
+                height: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="ui-top">
+            <div class="score-lives">
+                <div class="score-display">SCORE: <span id="score">0</span></div>
+                <div class="lives-display">❤️ <span id="lives">3</span></div>
+            </div>
+            <div class="combo-display">COMBO: <span id="combo">0</span></div>
+            <button class="menu-btn" onclick="showMenu()">🏠 MENU</button>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="lane"></div>
+            <div class="lane"></div>
+            <div class="lane"></div>
+            <div class="lane"></div>
+            
+            <div class="hit-line"></div>
+            
+            <div class="touch-zone" data-lane="0"></div>
+            <div class="touch-zone" data-lane="1"></div>
+            <div class="touch-zone" data-lane="2"></div>
+            <div class="touch-zone" data-lane="3"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== GAME STATE ==========
+        const gameState = {
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            lives: 3,
+            notes: [],
+            gameActive: true,
+            noteSpeed: 4,
+            lastSpawn: 0,
+            spawnInterval: 800,
+            bpm: 120,
+            perfectHits: 0
+        };
+
+        // ========== K-POP AUDIO SYSTEM ==========
+        let audioContext = null;
+        let bassOscillator = null;
+        let melodyOscillator = null;
+        
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        function playKPopBeat() {
+            if (!audioContext || !gameState.gameActive) return;
+            
+            try {
+                // Bass drum (kick)
+                const bassOsc = audioContext.createOscillator();
+                const bassGain = audioContext.createGain();
+                bassOsc.connect(bassGain);
+                bassGain.connect(audioContext.destination);
+                
+                bassOsc.frequency.value = 60;
+                bassOsc.type = 'sine';
+                bassGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                bassGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+                
+                bassOsc.start();
+                bassOsc.stop(audioContext.currentTime + 0.2);
+                
+                // Hi-hat
+                setTimeout(() => {
+                    if (!gameState.gameActive) return;
+                    const hihatOsc = audioContext.createOscillator();
+                    const hihatGain = audioContext.createGain();
+                    hihatOsc.connect(hihatGain);
+                    hihatGain.connect(audioContext.destination);
+                    
+                    hihatOsc.frequency.value = 8000;
+                    hihatOsc.type = 'square';
+                    hihatGain.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    hihatGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                    
+                    hihatOsc.start();
+                    hihatOsc.stop(audioContext.currentTime + 0.1);
+                }, 250);
+                
+            } catch (e) {
+                // Audio error
+            }
+        }
+        
+        function playHitSound(lane, perfect = false) {
+            if (!audioContext) return;
+            
+            try {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                // K-pop pentatonic scale
+                const frequencies = [523, 659, 784, 988]; // C5, E5, G5, B5
+                osc.frequency.value = frequencies[lane];
+                osc.type = perfect ? 'sine' : 'triangle';
+                
+                const volume = perfect ? 0.3 : 0.2;
+                gain.gain.setValueAtTime(volume, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+                
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.4);
+                
+                // Harmony layer for high combos
+                if (gameState.combo > 10) {
+                    setTimeout(() => {
+                        const harmonyOsc = audioContext.createOscillator();
+                        const harmonyGain = audioContext.createGain();
+                        harmonyOsc.connect(harmonyGain);
+                        harmonyGain.connect(audioContext.destination);
+                        
+                        harmonyOsc.frequency.value = frequencies[lane] * 1.5;
+                        harmonyOsc.type = 'sine';
+                        harmonyGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+                        harmonyGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                        
+                        harmonyOsc.start();
+                        harmonyOsc.stop(audioContext.currentTime + 0.3);
+                    }, 50);
+                }
+                
+            } catch (e) {
+                // Audio error
+            }
+        }
+        
+        function startKPopBeat() {
+            if (!gameState.gameActive) return;
+            
+            playKPopBeat();
+            setTimeout(() => {
+                if (gameState.gameActive) startKPopBeat();
+            }, (60 / gameState.bpm) * 1000);
+        }
+
+        // ========== NOTE SYSTEM ==========
+        function spawnNote() {
+            if (!gameState.gameActive) return;
+            
+            const lane = Math.floor(Math.random() * 4);
+            const gameArea = document.getElementById('gameArea');
+            
+            const note = document.createElement('div');
+            note.className = 'note';
+            note.style.left = (lane * 25 + 5) + '%';
+            note.style.top = '0px';
+            note.dataset.lane = lane;
+            
+            gameArea.appendChild(note);
+            gameState.notes.push({
+                element: note,
+                lane: lane,
+                y: 0
+            });
+        }
+        
+        function updateNotes() {
+            const gameArea = document.getElementById('gameArea');
+            const gameHeight = gameArea.offsetHeight;
+            const hitLineY = gameHeight - 80;
+            
+            gameState.notes = gameState.notes.filter(note => {
+                note.y += gameState.noteSpeed;
+                note.element.style.top = note.y + 'px';
+                
+                // Remove notes that are too far down
+                if (note.y > gameHeight + 50) {
+                    note.element.remove();
+                    return false;
+                }
+                
+                // Check for missed notes (passed hit line)
+                if (note.y > hitLineY + 60) {
+                    // MISS - lose life
+                    loseLife();
+                    note.element.remove();
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        // ========== INPUT SYSTEM ==========
+        function handleInput(lane) {
+            const hitLineY = document.getElementById('gameArea').offsetHeight - 80;
+            let hitNote = null;
+            let bestDistance = Infinity;
+            
+            // Find closest note in this lane
+            gameState.notes.forEach(note => {
+                if (note.lane === lane) {
+                    const distance = Math.abs(note.y - hitLineY);
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        hitNote = note;
+                    }
+                }
+            });
+            
+            if (hitNote && bestDistance < 50) {
+                // HIT!
+                const perfect = bestDistance < 20;
+                
+                // Score calculation
+                let baseScore = perfect ? 100 : 50;
+                let comboMultiplier = Math.floor(gameState.combo / 5) + 1;
+                gameState.score += baseScore * comboMultiplier;
+                
+                gameState.combo++;
+                if (perfect) gameState.perfectHits++;
+                
+                if (gameState.combo > gameState.maxCombo) {
+                    gameState.maxCombo = gameState.combo;
+                }
+                
+                // Remove note
+                hitNote.element.remove();
+                gameState.notes = gameState.notes.filter(n => n !== hitNote);
+                
+                // Effects
+                createHitEffect(lane, perfect);
+                playHitSound(lane, perfect);
+                
+                // Combo text
+                if (gameState.combo > 1) {
+                    createComboText(lane, perfect);
+                }
+                
+                updateUI();
+                
+                // Increase difficulty
+                if (gameState.combo % 20 === 0 && gameState.spawnInterval > 400) {
+                    gameState.spawnInterval -= 50;
+                    gameState.noteSpeed += 0.5;
+                }
+                
+            } else if (hitNote) {
+                // BAD TIMING - lose life
+                loseLife();
+            } else {
+                // NO NOTE - lose life
+                loseLife();
+            }
+        }
+        
+        function loseLife() {
+            gameState.lives--;
+            gameState.combo = 0;
+            updateUI();
+            
+            // Screen shake
+            const gameArea = document.getElementById('gameArea');
+            gameArea.style.animation = 'none';
+            setTimeout(() => {
+                gameArea.style.animation = 'shake 0.5s ease-out';
+            }, 10);
+            
+            if (gameState.lives <= 0) {
+                gameOver();
+            }
+        }
+        
+        function createHitEffect(lane, perfect) {
+            const gameArea = document.getElementById('gameArea');
+            const effect = document.createElement('div');
+            effect.className = 'hit-effect';
+            effect.style.left = (lane * 25 + 12.5) + '%';
+            effect.style.bottom = '60px';
+            effect.style.transform = 'translateX(-50%)';
+            
+            if (perfect) {
+                effect.style.background = 'radial-gradient(circle, #00FFFF, #FFFF00)';
+                effect.style.boxShadow = '0 0 40px #00FFFF';
+            }
+            
+            gameArea.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 800);
+        }
+        
+        function createComboText(lane, perfect) {
+            const gameArea = document.getElementById('gameArea');
+            const text = document.createElement('div');
+            text.className = 'combo-text';
+            text.style.left = (lane * 25 + 12.5) + '%';
+            text.style.bottom = '120px';
+            text.style.transform = 'translateX(-50%)';
+            
+            if (gameState.combo >= 50) {
+                text.style.color = '#FF0080';
+                text.style.fontSize = '32px';
+                text.textContent = `🔥 ${gameState.combo}x COMBO 🔥`;
+            } else if (gameState.combo >= 20) {
+                text.style.color = '#FFFF00';
+                text.style.fontSize = '28px';
+                text.textContent = `⚡ ${gameState.combo}x COMBO`;
+            } else if (gameState.combo >= 10) {
+                text.style.color = '#00FFFF';
+                text.style.fontSize = '24px';
+                text.textContent = `✨ ${gameState.combo}x`;
+            } else {
+                text.textContent = `${gameState.combo}x`;
+            }
+            
+            if (perfect) {
+                text.textContent += ' PERFECT!';
+            }
+            
+            gameArea.appendChild(text);
+            
+            setTimeout(() => {
+                text.remove();
+            }, 1200);
+        }
+
+        // ========== GAME OVER SYSTEM ==========
+        function gameOver() {
+            gameState.gameActive = false;
+            
+            // Save best score
+            const bestScore = localStorage.getItem('neonBeatBestScore') || 0;
+            if (gameState.score > bestScore) {
+                localStorage.setItem('neonBeatBestScore', gameState.score);
+            }
+            
+            showGameOverModal();
+        }
+        
+        function showGameOverModal() {
+            const modal = document.createElement('div');
+            modal.className = 'game-over-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-title">🎮 GAME OVER! 🎮</div>
+                    <div class="modal-stats">
+                        🎯 Score: <strong>${gameState.score}</strong><br>
+                        🔥 Max Combo: <strong>${gameState.maxCombo}</strong><br>
+                        ✨ Perfect Hits: <strong>${gameState.perfectHits}</strong>
+                    </div>
+                    <button class="modal-btn" onclick="watchAdToContinue()">🎬 WATCH AD TO CONTINUE</button><br>
+                    <button class="share-btn modal-btn" onclick="shareScore()">�� SHARE SCORE</button>
+                    <button class="share-btn modal-btn" onclick="copyViralMessage()">📋 COPY MESSAGE</button><br>
+                    <button class="menu-btn-modal modal-btn" onclick="location.reload();">🏠 MENU</button>                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function watchAdToContinue() {
+            // Simulate rewarded ad
+            const button = event.target;
+            button.textContent = '⏳ LOADING AD...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.textContent = '🎬 AD PLAYING...';
+                setTimeout(() => {
+                    // Grant reward: restore 2 lives
+                    gameState.lives = 2;
+                    gameState.gameActive = true;
+                    
+                    // Clear previous notes
+                    gameState.notes.forEach(note => {
+                        if (note.element && note.element.parentNode) {
+                            note.element.parentNode.removeChild(note.element);
+                        }
+                    });
+                    gameState.notes = [];
+                    
+                    // Reset spawn timer
+                    gameState.lastSpawn = Date.now();
+                    
+                    // Restart game loop
+                    console.log("STARTING GAMELOOP!");
+                    gameLoop();
+                    setupControls();
+                    startKPopBeat();                    
+                    document.querySelector('.game-over-modal').remove();
+                    
+                    // Show reward notification
+                    showNotification('🎬 AD REWARD: +2 LIVES! ❤️');
+                }, 3000);
+            }, 1000);
+        }
+        
+        function shareScore() {
+            const shareText = `🎵 ¡Conseguí ${gameState.score} puntos en Neon Beat Stage! 🎵\n\n🔥 Max Combo: ${gameState.maxCombo}x\n✨ Perfect Hits: ${gameState.perfectHits}\n\n🎮 ¿Puedes superarme?\nhttps://neon-beat-stage.netlify.app`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Neon Beat Stage - K-pop Rhythm Game',
+                    text: shareText,
+                    url: 'https://neon-beat-stage.netlify.app'
+                });
+            } else {
+                copyViralMessage();
+            }
+        }
+        
+        function copyViralMessage() {
+            const message = `�� ¡ÉPICO SCORE en Neon Beat Stage! 🎵\n\n🎯 Mi puntuación: ${gameState.score} puntos\n🔥 Combo máximo: ${gameState.maxCombo}x\n✨ Perfect hits: ${gameState.perfectHits}\n\n🎮 Juego K-pop GRATIS aquí:\nhttps://neon-beat-stage.netlify.app\n\n#NeonBeatStage #Kpop #RhythmGame`;
+            
+            navigator.clipboard.writeText(message).then(() => {
+                showNotification('📋 Message copied! Paste in any social media');
+            });
+        }
+        
+        function showNotification(text) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: rgba(0,255,255,0.9); color: #000; padding: 15px 25px;
+                border-radius: 10px; font-weight: bold; z-index: 2000;
+                animation: fadeInOut 3s ease-out forwards;
+            `;
+            notification.textContent = text;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // ========== UI SYSTEM ==========
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('combo').textContent = gameState.combo;
+            document.getElementById('lives').textContent = gameState.lives;
+            
+            // Color changes
+            const comboElement = document.getElementById('combo');
+            const livesElement = document.getElementById('lives');
+            
+            if (gameState.combo >= 50) {
+                comboElement.style.color = '#FF0080';
+            } else if (gameState.combo >= 20) {
+                comboElement.style.color = '#FFFF00';
+            } else {
+                comboElement.style.color = '#00FFFF';
+            }
+            
+            if (gameState.lives <= 1) {
+                livesElement.style.color = '#FF0000';
+                livesElement.style.animation = 'pulse 1s infinite';
+            } else {
+                livesElement.style.color = '#FF0080';
+                livesElement.style.animation = 'none';
+            }
+        }
+
+        // ========== CONTROLS ==========
+        function setupControls() {
+            if (controlsSetup) return;
+            controlsSetup = true;
+            const touchZones = document.querySelectorAll('.touch-zone');
+            
+            touchZones.forEach((zone) => {
+                const lane = parseInt(zone.dataset.lane);
+                
+                zone.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (gameState.gameActive) handleInput(lane);
+                }, { passive: false });
+                
+                zone.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (gameState.gameActive) handleInput(lane);
+                });
+            });
+        }
+
+        // ========== GAME LOOP ==========
+        function gameLoop() {
+            if (!gameState.gameActive) return;
+            // FORCE SPAWN - Frame Counter
+            gameState.frameCount = (gameState.frameCount || 0) + 1;
+            if (gameState.frameCount >= 48) {
+                console.log("FORCE SPAWN FRAME:", gameState.frameCount);
+                spawnNote();
+                gameState.frameCount = 0;
+            }            
+            updateNotes();            requestAnimationFrame(gameLoop);
+        }
+
+        // ========== INITIALIZATION ==========
+        function startGame() {
+            gameState.gameActive = true;
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.lives = 3;
+            gameState.notes = [];
+            gameState.perfectHits = 0;
+            gameState.lastSpawn = Date.now();
+            gameState.spawnInterval = 800;
+            gameState.noteSpeed = 4;
+            
+            document.querySelectorAll('.note').forEach(note => note.remove());
+            updateUI();
+            console.log("STARTING GAMELOOP!");
+            gameLoop();
+            startKPopBeat();
+        }
+        
+        function restartGame() {
+            document.querySelectorAll('.game-over-modal').forEach(modal => modal.remove());
+            startGame();
+        }
+        
+        function showMenu() {
+            alert('Menu functionality - would return to main menu');
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+                20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                80% { opacity: 1; }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ========== START ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initAudio();
+            setupControls();
+            startGame();
+        });
+    </script>
+</body>
+</html>
