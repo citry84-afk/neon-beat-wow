@@ -662,11 +662,9 @@
                     
                     // Restart game loop
                     console.log("STARTING GAMELOOP!");
-            gameLoop();
+                    gameLoop();
                     setupControls();
-                    startKPopBeat();
-                    updateUI();
-                    
+                    startKPopBeat();                    
                     document.querySelector('.game-over-modal').remove();
                     
                     // Show reward notification
@@ -779,9 +777,6 @@
             gameState.combo = 0;
             gameState.lives = 3;
             gameState.notes = [];
-                    
-                    // Reset spawn timer
-                    gameState.lastSpawn = Date.now();
             gameState.perfectHits = 0;
             gameState.lastSpawn = Date.now();
             gameState.spawnInterval = 800;
@@ -791,6 +786,7 @@
             updateUI();
             console.log("STARTING GAMELOOP!");
             gameLoop();
+            startKPopBeat();
         }
         
         function restartGame() {
