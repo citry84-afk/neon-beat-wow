@@ -3,2070 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 Neon Beat Stage - Electronic Rhythm Game | LIPA Studios</title>
-    <meta name="description" content="Test your rhythm skills with this electronic music game. Perfect timing, build combos, and master the beat with ORIGINAL music!">
-    <meta name="keywords" content="rhythm game, music game, K-pop game, timing game, neon game, LIPA Studios">
-    
-    <!-- Open Graph -->
-    <meta property="og:title" content="Neon Beat Stage - Master the K-pop Rhythm">
-    <meta property="og:description" content="Can you hit perfect timing? This rhythm game will test your musical skills!">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://neon-beat-stage.netlify.app">
-    
-    <!-- Twitter Cards -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Neon Beat Stage - K-pop Rhythm Game">
-    <meta name="twitter:description" content="Master the K-pop rhythm! Perfect timing, epic combos, neon beats!">
-    
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-633RQLC6T0"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-633RQLC6T0');
-        
-        window.trackEvent = function(eventName, parameters = {}) {
-            gtag('event', eventName, {
-                event_category: 'rhythm_game',
-                ...parameters
-            });
-        };
-    </script>
-    
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4129506161314540"
-            crossorigin="anonymous"></script>
-    
-    <!-- H5 Games Ads API -->
-    <script>
-        window.adBreak = function(config) {
-            console.log('AdBreak called:', config);
-            if (config.beforeAd) config.beforeAd();
-            setTimeout(() => {
-                if (config.afterAd) config.afterAd();
-            }, config.type === 'reward' ? 3000 : 1500);
-        };
-    </script>
-    
+    <title>Neon Beat Stage - K-pop Rhythm Game</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(145deg, #0a0a0a, #1a1a2e); color: white; overflow: hidden; height: 100vh; user-select: none; }
+        .game-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(0,0,0,0.8); border-bottom: 2px solid #FF0080; }
+        .score { color: #FFFF00; font-weight: bold; font-size: 18px; }
+        .lives { color: #FF4444; font-weight: bold; font-size: 18px; }
+        .combo { color: #00FFFF; font-weight: bold; font-size: 18px; }
+        .game-area { width: 100%; height: calc(100vh - 80px); position: relative; display: flex; background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); }
+        .lane { width: 25%; height: 100%; border-left: 1px solid #00FFFF; position: relative; cursor: pointer; }
+        .lane:last-child { border-right: 1px solid #00FFFF; }
+        .hit-line { position: absolute; bottom: 80px; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, #FF0080, #00FFFF, #FFFF00, #FF0080); box-shadow: 0 0 20px #FF0080; z-index: 10; }
+        .note { position: absolute; width: 20%; height: 40px; left: 2.5%; background: linear-gradient(45deg, #FF0080, #00FFFF); border-radius: 8px; box-shadow: 0 0 15px #FF0080; border: 2px solid #FFFFFF; z-index: 5; }
+        .touch-zone { position: absolute; bottom: 0; width: 100%; height: 160px; background: rgba(0,255,255,0.1); z-index: 20; }
+
+        /* EFECTOS VISUALES ÉPICOS */
+        .hit-blast {
+            position: absolute; width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,0,128,0.6) 50%, transparent 100%);
+            pointer-events: none; z-index: 30; animation: hitBlast 0.3s ease-out forwards;
         }
-        
-        body {
-            font-family: 'Orbitron', monospace;
-            background: linear-gradient(135deg, #050505 0%, #0a0a0a 50%, #1a0a1a 100%);
-            color: #00FFFF;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-            overflow: hidden;
-            /* Performance optimizations */
-            will-change: auto;
-            transform: translateZ(0);
+        @keyframes hitBlast {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(3) rotate(360deg); opacity: 0; }
         }
-        
-        .title {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: #FF0080;
-            text-shadow: 0 0 30px #FF0080;
-            margin-bottom: 20px;
-            letter-spacing: 0.1em;
-            animation: titlePulse 2s ease-in-out infinite;
-            text-align: center;
+        .particle {
+            position: absolute; width: 8px; height: 8px; background: #FFFF00; border-radius: 50%;
+            pointer-events: none; z-index: 25;
         }
-        
-        @keyframes titlePulse {
-            0%, 100% { text-shadow: 0 0 30px #FF0080; }
-            50% { text-shadow: 0 0 50px #FF0080, 0 0 70px #FF0080; }
+        .combo-text {
+            position: absolute; font-size: 24px; font-weight: bold; pointer-events: none; z-index: 35;
+            animation: comboFloat 1s ease-out forwards;
         }
-        
-        .subtitle {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #00FFFF;
-            text-shadow: 0 0 20px #00FFFF;
-            margin-bottom: 30px;
-            letter-spacing: 0.2em;
-            text-align: center;
+        @keyframes comboFloat {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
         }
-        
-        .btn {
-            padding: 15px 30px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 3px solid #FF0080;
-            border-radius: 12px;
-            color: #FF0080;
-            font-family: 'Orbitron', monospace;
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin: 10px;
+        .perfect-indicator {
+            position: absolute; font-size: 20px; font-weight: bold; color: #FFFF00;
+            text-shadow: 0 0 10px #FFFF00; pointer-events: none; z-index: 35;
+            animation: perfectPulse 0.5s ease-out forwards;
         }
-        
-        .btn:hover {
-            background: rgba(255, 0, 128, 0.1);
-            box-shadow: 0 0 25px rgba(255, 0, 128, 0.5);
-            transform: translateY(-3px);
-        }
-        
-        .game-area {
-            width: 100vw;
-            height: 75vh;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a1a1a 100%);
-            position: fixed;
-            top: 120px;
-            left: 0;
-            margin: 0;
-            overflow: hidden;
-            /* Performance optimizations */
-            will-change: transform;
-            contain: layout style paint;
-            z-index: 10;
-            /* RHYTHM GAME AREA - MOBILE VERTICAL OPTIMIZED */
-            display: flex;
-            border-top: 3px solid #00FFFF;
-            border-bottom: 3px solid #00FFFF;
-        }
-        
-        /* RHYTHM GAME LANES */
-        .lane {
-            width: 25%;
-            height: 100%;
-            border-right: 2px solid rgba(0, 255, 255, 0.3);
-            position: relative;
-            background: linear-gradient(180deg, transparent 0%, rgba(255, 0, 128, 0.1) 85%, rgba(255, 0, 128, 0.3) 100%);
-        }
-        
-        .lane:last-child {
-            border-right: none;
-        }
-        
-        /* HIT LINE */
-        .hit-line {
-            position: absolute;
-            bottom: 60px;
-            left: 0;
-            right: 0;
-            height: 8px;
-            background: linear-gradient(90deg, #FF0080, #00FFFF, #39FF14, #8A2BE2);
-            box-shadow: 0 0 20px rgba(255, 0, 128, 0.8);
-            animation: hitLinePulse 1s ease-in-out infinite;
-            z-index: 30;
-        }
-        
-        @keyframes hitLinePulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 128, 0.8); }
-            50% { box-shadow: 0 0 40px rgba(255, 0, 128, 1), 0 0 60px rgba(0, 255, 255, 0.5); }
-        }
-        
-        /* NOTES */
-        .note {
-            position: absolute;
-            width: 80%;
-            height: 20px;
-            left: 10%;
-            border-radius: 10px;
-            border: 2px solid #FFFFFF;
-            box-shadow: 0 0 15px;
-            animation: noteGlow 0.5s ease-in-out infinite alternate;
-            z-index: 20;
-        }
-        
-        .note.lane-0 {
-            background: linear-gradient(45deg, #FF0080, #FF4080);
-            box-shadow: 0 0 15px #FF0080;
-        }
-        
-        .note.lane-1 {
-            background: linear-gradient(45deg, #00FFFF, #40FFFF);
-            box-shadow: 0 0 15px #00FFFF;
-        }
-        
-        .note.lane-2 {
-            background: linear-gradient(45deg, #39FF14, #79FF54);
-            box-shadow: 0 0 15px #39FF14;
-        }
-        
-        .note.lane-3 {
-            background: linear-gradient(45deg, #8A2BE2, #BA5BE2);
-            box-shadow: 0 0 15px #8A2BE2;
-        }
-        
-        @keyframes noteGlow {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.05); }
-        }
-        
-        /* HIT EFFECTS */
-        .hit-effect {
-            position: absolute;
-            bottom: 60px;
-            width: 100%;
-            height: 40px;
-            pointer-events: none;
-            z-index: 25;
-        }
-        
-        .hit-effect.perfect {
-            background: radial-gradient(circle, rgba(255, 255, 0, 0.8) 0%, transparent 70%);
-            animation: perfectHit 0.3s ease-out;
-        }
-        
-        .hit-effect.good {
-            background: radial-gradient(circle, rgba(0, 255, 255, 0.6) 0%, transparent 70%);
-            animation: goodHit 0.3s ease-out;
-        }
-        
-        .hit-effect.miss {
-            background: radial-gradient(circle, rgba(255, 0, 0, 0.6) 0%, transparent 70%);
-            animation: missHit 0.3s ease-out;
-        }
-        
-        @keyframes perfectHit {
-            0% { transform: scale(0.5); opacity: 1; }
-            100% { transform: scale(2); opacity: 0; }
-        }
-        
-        @keyframes goodHit {
-            0% { transform: scale(0.5); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-        
-        @keyframes missHit {
-            0% { transform: scale(0.5); opacity: 1; }
+        @keyframes perfectPulse {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(1); opacity: 0; }
         }
-        
-        /* UI ELEMENTS */
-        .score-display {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: #FFFF00;
-            text-shadow: 0 0 10px #FFFF00;
-            z-index: 1000;
-        }
-        
-        .combo-display {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: #39FF14;
-            text-shadow: 0 0 10px #39FF14;
-            z-index: 1000;
-        }
-        
-        .level-display {
-            position: fixed;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #FF0080;
-            text-shadow: 0 0 10px #FF0080;
-            z-index: 1000;
-        }
-        
-        .bpm-display {
-            position: fixed;
-            top: 85px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1rem;
-            color: #00FFFF;
-            text-shadow: 0 0 10px #00FFFF;
-            z-index: 1000;
-        }
-        
-        /* STAGE LIGHTING */
-        .stage-lights {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 5;
-            opacity: 0.3;
-        }
-        
-        .stage-light {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            animation: stageLightPulse 2s ease-in-out infinite;
-        }
-        
-        .stage-light.light-1 {
-            top: 10%;
-            left: 10%;
-            background: radial-gradient(circle, #FF0080, transparent);
-            animation-delay: 0s;
-        }
-        
-        .stage-light.light-2 {
-            top: 10%;
-            right: 10%;
-            background: radial-gradient(circle, #00FFFF, transparent);
-            animation-delay: 0.5s;
-        }
-        
-        .stage-light.light-3 {
-            bottom: 10%;
-            left: 20%;
-            background: radial-gradient(circle, #39FF14, transparent);
-            animation-delay: 1s;
-        }
-        
-        .stage-light.light-4 {
-            bottom: 10%;
-            right: 20%;
-            background: radial-gradient(circle, #8A2BE2, transparent);
-            animation-delay: 1.5s;
-        }
-        
-        @keyframes stageLightPulse {
-            0%, 100% { opacity: 0.2; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.2); }
-        }
-        
-        /* PARTICLES */
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #FFFF00;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 45;
-        }
-        
-        .particle.perfect-burst {
-            animation: perfectBurst 1s ease-out forwards;
-        }
-        
-        @keyframes perfectBurst {
-            0% { opacity: 1; transform: scale(1) translate(0, 0); }
-            100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)); }
-        }
-        
-        /* PERFECT INDICATOR */
-        .perfect-indicator {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            font-weight: 900;
-            color: #FFFF00;
-            text-shadow: 0 0 30px #FFFF00;
-            z-index: 100;
-            animation: perfectIndicatorAnim 1s ease-out forwards;
-            pointer-events: none;
-        }
-        
-        @keyframes perfectIndicatorAnim {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
-        }
-        
-        /* SCREENS */
-        .screen {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: linear-gradient(135deg, #050505 0%, #0a0a0a 50%, #1a0a1a 100%);
-            z-index: 100;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        /* MOBILE OPTIMIZATIONS */
-        @media (max-width: 480px) {
-            .title {
-                font-size: 2.5rem;
-            }
-            
-            .subtitle {
-                font-size: 1.2rem;
-            }
-            
-            .btn {
-                font-size: 1rem;
-                padding: 12px 24px;
-            }
-            
-            .score-display, .combo-display {
-                font-size: 1.2rem;
-            }
-            
-            .level-display {
-                font-size: 1rem;
-            }
-            
-            .lives-display {
-                font-size: 1rem;
-            }
-        }
-        
-        /* LIVES DISPLAY */
-        .lives-display {
-            position: fixed;
-            top: 130px;
-            right: 20px;
-            color: #FF6B6B;
-            font-weight: 900;
-            font-size: 1rem;
-            text-shadow: 0 0 15px #FF6B6B;
-            z-index: 1000;
-        }
-        
-        /* SCREEN SHAKE EFFECT */
+        .screen-shake { animation: shake 0.3s ease-in-out; }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
-        
-        /* PULSE ANIMATION FOR REWARDED AD BUTTON */
+        .lane-flash { animation: laneFlash 0.2s ease-out; }
         @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
-            50% { transform: scale(1.05); box-shadow: 0 6px 25px rgba(255,215,0,0.7); }
-            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
-        }
-        
-        /* TOUCH ZONES - MOBILE VERTICAL OPTIMIZED */
-        .touch-zone {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 25%;
-            background: transparent;
-            z-index: 50;
-            touch-action: manipulation;
-            /* LARGER HIT AREAS FOR MOBILE */
-            border: 2px solid transparent;
-            transition: all 0.1s ease;
-        }
-        
-        .touch-zone[data-lane="0"] { left: 0%; z-index: 51; }
-        .touch-zone[data-lane="1"] { left: 25%; z-index: 52; }
-        .touch-zone[data-lane="2"] { left: 50%; z-index: 53; }
-        .touch-zone[data-lane="3"] { left: 75%; z-index: 54; }
-        
-        .touch-zone.active {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: scale(1.02);
-        }
-        
-        /* MOBILE OPTIMIZATIONS */
-        @media (max-width: 480px) {
-            .game-area {
-                height: 85vh;
-                top: 80px;
-            }
-            
-            .lane {
-                /* More defined lanes for mobile */
-                border-left: 1px solid rgba(0, 255, 255, 0.3);
-                border-right: 1px solid rgba(0, 255, 255, 0.3);
-            }
-            
-            .lane:first-child {
-                border-left: 2px solid #00FFFF;
-            }
-            
-            .lane:last-child {
-                border-right: 2px solid #00FFFF;
-            }
-            
-            .touch-zone {
-                /* Even larger touch areas for small screens */
-                border-width: 3px;
-                /* Add subtle glow for better visibility */
-                box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
-            }
-            
-            .touch-zone.active {
-                background: rgba(255, 255, 255, 0.3);
-                transform: scale(1.05);
-                box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.3);
-            }
-            
-            .hit-line {
-                /* Thicker hit line for mobile */
-                height: 6px;
-                box-shadow: 0 0 15px #FFFF00;
-            }
-            
-            .note {
-                /* Slightly larger notes for mobile */
-                transform: scale(1.1);
-            }
-            
-            .instructions {
-                font-size: 0.7rem;
-                padding: 5px 10px;
-                bottom: 5px;
-            }
-        }
-        
-        /* EXTRA SMALL SCREENS */
-        @media (max-width: 360px) {
-            .game-area {
-                height: 90vh;
-                top: 60px;
-            }
-            
-            .hud {
-                font-size: 0.8rem;
-                top: 10px;
-            }
-            
-            .instructions {
-                font-size: 0.6rem;
-            }
-        }
-        
-        /* INSTRUCTIONS */
-        .instructions {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            z-index: 1000;
-            background: rgba(0,0,0,0.9);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #00FFFF;
-            font-size: 0.7rem;
-            text-align: center;
-            color: #00FFFF;
-        }
-        
-        /* ADS STYLING */
-        .ad-banner {
-            background: rgba(0,0,0,0.85);
-            padding: 5px;
-            text-align: center;
-            border: 1px solid #333;
-            transition: opacity 0.3s ease;
-        }
-        
-        .ad-top {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #333;
-        }
-        
-        .ad-bottom {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 1000;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-top: 1px solid #333;
-        }
-    </style>
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }        @keyframes laneFlash {
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }            0% { background: rgba(255,255,255,0); }
+            50% { background: rgba(255,255,255,0.4); }
+            100% { background: rgba(255,255,255,0); }
+        }    </style>
 </head>
 <body>
-    <!-- STAGE LIGHTING -->
-    <div class="stage-lights">
-        <div class="stage-light light-1"></div>
-        <div class="stage-light light-2"></div>
-        <div class="stage-light light-3"></div>
-        <div class="stage-light light-4"></div>
+    <div class="game-header">
+        <div class="score" id="score">SCORE: 0</div>
+        <div class="lives" id="lives">❤️ 3</div>
+        <div class="combo" id="combo">COMBO: 0</div>
     </div>
-    
-    <!-- MENU SCREEN -->
-    <div id="menu-screen" class="screen">
-        <div class="title">NEON BEAT STAGE</div>
-        <div class="subtitle">K-POP RHYTHM GAME</div>
-        
-        <button class="btn" onclick="startGame()">🎵 START RHYTHM</button>
-        <button class="btn" onclick="showTutorial()">📚 TUTORIAL</button>
-        <button class="btn" onclick="testAudio()">🔊 TEST AUDIO</button>
-        
-        <div style="margin-top: 30px; text-align: center; color: #39FF14;">
-            <div style="font-size: 1rem; margin-bottom: 10px;">🏆 BEST SCORE</div>
-            <div style="font-size: 1.5rem; font-weight: 900;" id="best-score">0</div>
-        </div>
-        
-        <div style="margin-top: 20px; text-align: center; color: #8A2BE2; font-size: 0.8rem;">
-            🎮 by LIPA Studios
-        </div>
+    <div class="game-area" id="gameArea">
+        <div class="lane" data-lane="0"><div class="touch-zone" data-lane="0"></div></div>
+        <div class="lane" data-lane="1"><div class="touch-zone" data-lane="1"></div></div>
+        <div class="lane" data-lane="2"><div class="touch-zone" data-lane="2"></div></div>
+        <div class="lane" data-lane="3"><div class="touch-zone" data-lane="3"></div></div>
+        <div class="hit-line"></div>
     </div>
-    
-    <!-- GAME SCREEN -->
-    <div id="game-screen" class="screen hidden">
-        <!-- TOP BANNER AD -->
-        <div class="ad-banner ad-top">
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-4129506161314540"
-                 data-ad-slot="auto"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-        </div>
-        
-        <!-- GAME UI -->
-        <div class="score-display">SCORE: <span id="score">0</span></div>
-        <div class="combo-display">COMBO: <span id="combo">0</span></div>
-        <div class="level-display">LEVEL <span id="level">1</span></div>
-        <div class="bpm-display"><span id="bpm">90</span> BPM</div>
-        <div class="lives-display">❤️ <span id="lives">3</span></div>
-        
-        <!-- GAME AREA -->
-        <div class="game-area" id="game-area">
-            <!-- LANES -->
-            <div class="lane" data-lane="0"></div>
-            <div class="lane" data-lane="1"></div>
-            <div class="lane" data-lane="2"></div>
-            <div class="lane" data-lane="3"></div>
-            
-            <!-- HIT LINE -->
-            <div class="hit-line"></div>
-            
-            <!-- TOUCH ZONES -->
-            <div class="touch-zone" data-lane="0"></div>
-            <div class="touch-zone" data-lane="1"></div>
-            <div class="touch-zone" data-lane="2"></div>
-            <div class="touch-zone" data-lane="3"></div>
-        </div>
-        
-        <!-- INSTRUCTIONS -->
-        <div class="instructions">
-            🎵 <strong>TAP LANES WHEN NOTES HIT THE LINE</strong> • 🎯 Perfect = 100pts • 🎶 Perfect hits unlock MELODY • 🎤 Combos add VOCAL!
-        </div>
-        
-        <button class="btn" onclick="showMenu()" style="position: fixed; top: 20px; right: 20px; z-index: 1001; padding: 8px 16px; font-size: 0.8rem;">🏠 MENU</button>
-        
-        <!-- BOTTOM BANNER AD -->
-        <div class="ad-banner ad-bottom">
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-4129506161314540"
-                 data-ad-slot="auto"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-        </div>
-    </div>
-
     <script>
-        // ========== GAME STATE ==========
-        let gameState = {
-            score: 0,
-            combo: 0,
-            level: 1,
-            bpm: 90,
-            gameActive: false,
-            notes: [],
-            perfectHits: 0,
-            goodHits: 0,
-            missHits: 0,
-            totalNotes: 0,
-            accuracy: 100,
-            lastNoteTime: 0,
-            beatInterval: 0,
-            noteSpeed: 200, // pixels per second
-            startTime: 0,
-            // GAME OVER SYSTEM
-            health: 100,
-            maxHealth: 100,
-            lives: 3,
-            maxLives: 3
-        };
-        
-        let currentScreen = 'menu';
-        let gameLoop;
+        let gameState = { score: 0, combo: 0, maxCombo: 0, lives: 3, notes: [], gameActive: true, frameCount: 0, perfectHits: 0, goodHits: 0 };
         let audioContext = null;
-        let backgroundMusicInterval = null;
-        
-        // ========== AUDIO SYSTEM ==========
+        let backgroundMusic = null;
+
         function initAudio() {
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                console.log('Audio initialized successfully');
-                return true;
+                console.log("🎵 Audio initialized");
             } catch (e) {
-                console.error('Audio initialization failed:', e);
-                return false;
+                console.log("Audio not supported");
             }
         }
-        
-        function playSound(frequency, duration, type = 'square', volume = 0.1) {
+
+        function playSound(frequency, duration, type = "sine", volume = 0.3) {
             if (!audioContext) return;
-            
-            try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                const filterNode = audioContext.createBiquadFilter();
-                
-                // AUDIO CHAIN: Oscillator -> Filter -> Gain -> Output
-                oscillator.connect(filterNode);
-                filterNode.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                // OSCILLATOR SETUP
-                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-                oscillator.type = type;
-                
-                // LOW-PASS FILTER for smoother sound
-                filterNode.type = 'lowpass';
-                filterNode.frequency.setValueAtTime(frequency * 2.5, audioContext.currentTime);
-                filterNode.Q.setValueAtTime(0.8, audioContext.currentTime);
-                
-                // SMOOTH ENVELOPE (less robotic)
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.02);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration / 1000);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + duration / 1000);
-            } catch (e) {
-                console.error('Sound playback failed:', e);
-            }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
         }
-        
-        function playHitSound(type) {
-            switch(type) {
-                case 'perfect':
-                    // Beautiful bell-like sound for perfect hits
-                    playSound(880, 200, 'sine', 0.1);
-                    setTimeout(() => playSound(1320, 150, 'triangle', 0.06), 60);
-                    break;
-                case 'good':
-                    // Pleasant tone for good hits
-                    playSound(660, 150, 'triangle', 0.08);
-                    break;
-                case 'miss':
-                    // Gentle error sound (not harsh)
-                    playSound(240, 120, 'sine', 0.05);
-                    break;
-            }
-        }
-        
-        // ========== ORIGINAL PROGRESSIVE MUSIC SYSTEM ==========
-        // 🚨 COPYRIGHT SAFE: 100% ORIGINAL COMPOSITION
-        // Uses mathematical frequency synthesis - NO copyrighted material
-        let musicLayers = {
-            bass: null,
-            melody: null,
-            harmony: null,
-            vocal: null
-        };
-        
-        function playBackgroundMusic() {
-            if (!audioContext || backgroundMusicInterval || !gameState.gameActive) return;
-            
-            const bpm = gameState.bpm;
-            const beatDuration = (60 / bpm) * 1000; // ms per beat
-            
-            // ORIGINAL composition inspired by electronic music styles
-            // These are basic musical frequencies - NOT copyrighted melodies
-            const bassLine = [131, 147, 110, 123]; // Bass notes (C3, D3, A2, B2)
-            const melodyLine = [523, 587, 440, 494]; // Melody (C5, D5, A4, B4)
-            const harmonyLine = [659, 740, 554, 622]; // Harmony (E5, F#5, C#5, D#5)
-            const vocalLine = [784, 880, 659, 740]; // Vocal layer (G5, A5, E5, F#5)
-            
-            let beatIndex = 0;
-            
-            function playNextBeat() {
-                try {
-                    if (!audioContext || !gameState.gameActive) {
-                        stopBackgroundMusic();
-                        return;
+
+        function startKPopBeat() {
+            if (!audioContext) return;
+            let beatCount = 0;
+            const kpopFreqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            backgroundMusic = setInterval(() => {
+                if (gameState.gameActive) {
+                    playSound(130.81, 0.1, "sawtooth", 0.15); // Bass drum
+                    if (beatCount % 2 === 0) {
+                        playSound(kpopFreqs[beatCount % 4], 0.2, "sine", 0.1);
                     }
-                    
-                    const currentBeat = beatIndex % 4;
-                    
-                    // 🎵 BASS - Always playing (smooth foundation)
-                    playSound(bassLine[currentBeat], beatDuration * 0.8, 'sine', 0.06);
-                    
-                    // 🎶 MELODY - Appears with Perfect hits (more musical)
-                    if (gameState.perfectHits > 3) {
-                        setTimeout(() => {
-                            playSound(melodyLine[currentBeat], beatDuration * 0.6, 'triangle', 0.04);
-                        }, 150);
-                    }
-                    
-                    // 🎵 HARMONY - Appears with combos > 8 (gentler)
-                    if (gameState.combo > 8) {
-                        setTimeout(() => {
-                            playSound(harmonyLine[currentBeat], beatDuration * 0.5, 'sine', 0.03);
-                        }, 300);
-                    }
-                    
-                    // 🎤 VOCAL - Appears with combos > 15 (smoother vocal)
-                    if (gameState.combo > 15) {
-                        setTimeout(() => {
-                            playSound(vocalLine[currentBeat], beatDuration * 0.4, 'triangle', 0.025);
-                        }, 450);
-                    }
-                    
-                    // 🔥 EXTRA PERCUSSION on high levels
-                    if (gameState.level > 5 && currentBeat % 2 === 0) {
-                        playSound(200, beatDuration * 0.1, 'square', 0.06); // Kick
-                    }
-                    if (gameState.level > 8 && currentBeat % 2 === 1) {
-                        playSound(800, beatDuration * 0.05, 'square', 0.04); // Hi-hat
-                    }
-                    
-                    beatIndex++;
-                    backgroundMusicInterval = setTimeout(playNextBeat, beatDuration);
-                } catch (e) {
-                    stopBackgroundMusic();
+                    beatCount++;
                 }
-            }
-            
-            playNextBeat();
-            console.log(`🎵 Original electronic music started at ${bpm} BPM - 100% copyright free`);
-        }
-        
-        function stopBackgroundMusic() {
-            if (backgroundMusicInterval) {
-                clearTimeout(backgroundMusicInterval);
-                backgroundMusicInterval = null;
-                console.log('Background music stopped');
-            }
-        }
-        
-        // ========== SCREEN MANAGEMENT ==========
-        function showScreen(screenName) {
-            console.log(`Switching to ${screenName}`);
-            
-            const screens = ['menu', 'game'];
-            screens.forEach(name => {
-                const screen = document.getElementById(name + '-screen');
-                if (screen) {
-                    screen.classList.add('hidden');
-                }
-            });
-            
-            const targetScreen = document.getElementById(screenName + '-screen');
-            if (targetScreen) {
-                targetScreen.classList.remove('hidden');
-                currentScreen = screenName;
-                console.log(`Now showing ${screenName} screen`);
-            }
-        }
-        
-        function showMenu() {
-            if (gameLoop) {
-                cancelAnimationFrame(gameLoop);
-                gameLoop = null;
-            }
-            gameState.gameActive = false;
-            stopBackgroundMusic();
-            showScreen('menu');
-            
-            // Clear game area
-            const gameArea = document.getElementById('game-area');
-            const notes = gameArea.querySelectorAll('.note');
-            notes.forEach(note => note.remove());
-            
-            // Update best score
-            const bestScore = localStorage.getItem('neonBeatBestScore') || 0;
-            document.getElementById('best-score').textContent = bestScore;
-        }
-        
-        // ========== GAME LOGIC ==========
+            }, 500);
+        }        
         function startGame() {
-            console.log('Starting rhythm game...');
-            
-            // Reset game state
-            gameState = {
-                score: 0,
-                combo: 0,
-                level: 1,
-                bpm: 90,
-                gameActive: true,
-                notes: [],
-                perfectHits: 0,
-                goodHits: 0,
-                missHits: 0,
-                totalNotes: 0,
-                accuracy: 100,
-                lastNoteTime: 0,
-                beatInterval: (60 / 90) * 1000, // 90 BPM
-                noteSpeed: 200,
-                startTime: Date.now()
-            };
-            
-            showScreen('game');
-            
-            // Initialize audio
-            if (!audioContext) {
-                initAudio();
-            }
-            
-            if (audioContext) {
-                audioContext.resume().then(() => {
-                    setTimeout(() => {
-                        if (gameState.gameActive) {
-                            playBackgroundMusic();
-                        }
-                    }, 500);
-                });
-            }
-            
+            console.log('🎮 STARTING NEON BEAT STAGE');
+            gameState.gameActive = true;
+            gameState.frameCount = 0;
             updateUI();
-            startGameLoop();
-            
-            // Track game start
-            window.trackEvent('song_start', {
-                level: gameState.level,
-                bpm: gameState.bpm
-            });
-            
-            console.log('Rhythm game started successfully');
+            gameLoop();
+            setupControls();
+            initAudio();
+            startKPopBeat();
+            console.log('✅ Game started successfully');
         }
         
-        function startGameLoop() {
-            function gameLoopFrame() {
-                if (!gameState.gameActive) return;
-                
-                updateGame();
-                gameLoop = requestAnimationFrame(gameLoopFrame);
-            }
-            
-            gameLoopFrame();
-        }
-        
-        function updateGame() {
+        function gameLoop() {
             if (!gameState.gameActive) return;
-            
-            const currentTime = Date.now();
-            const elapsed = currentTime - gameState.startTime;
-            
-            // Spawn notes based on BPM
-            if (currentTime - gameState.lastNoteTime > gameState.beatInterval) {
+            gameState.frameCount++;
+            if (gameState.frameCount >= 48) {
                 spawnNote();
-                gameState.lastNoteTime = currentTime;
+                gameState.frameCount = 0;
             }
-            
-            // Move notes
             moveNotes();
-            
-            // Check for missed notes
-            checkMissedNotes();
-            
-            // Level progression
-            if (gameState.score > 0 && gameState.score % 1000 === 0 && gameState.level < 20) {
-                levelUp();
-            }
-            
-            updateUI();
+            requestAnimationFrame(gameLoop);
         }
         
-        // ========== RHYTHM GAME CORE FUNCTIONS ==========
         function spawnNote() {
-            const lanes = 4;
-            const lane = Math.floor(Math.random() * lanes);
-            const gameArea = document.getElementById('game-area');
-            
+            const lane = Math.floor(Math.random() * 4);
+            const gameArea = document.getElementById('gameArea');
             const note = document.createElement('div');
             note.className = 'note';
-            note.style.cssText = `
-                position: absolute;
-                width: 60px;
-                height: 20px;
-                background: linear-gradient(45deg, #FF0080, #00FFFF);
-                border: 2px solid #FFFF00;
-                border-radius: 10px;
-                box-shadow: 0 0 15px rgba(255,255,0,0.8);
-                left: ${lane * 25}%;
-                top: 0;
-                transform: translateX(-50%);
-                z-index: 100;
-            `;
-            
+            note.style.left = (lane * 25 + 2.5) + '%';
+            note.style.top = '0px';
+            note.dataset.lane = lane;
             gameArea.appendChild(note);
-            
-            gameState.notes.push({
-                element: note,
-                lane: lane,
-                y: 0,
-                speed: gameState.noteSpeed,
-                active: true
-            });
-            
-            gameState.totalNotes++;
+            gameState.notes.push({ element: note, lane: lane, y: 0 });
+            console.log(`🎵 Note spawned in lane ${lane}. Total notes: ${gameState.notes.length}`);
         }
         
         function moveNotes() {
-            const gameAreaHeight = document.getElementById('game-area').offsetHeight;
-            
             gameState.notes.forEach((note, index) => {
-                if (!note.active) return;
-                
-                note.y += note.speed * (1/60); // 60fps
+                note.y += 4;
                 note.element.style.top = note.y + 'px';
-                
-                // Remove notes that are off screen
-                if (note.y > gameAreaHeight + 50) {
+                if (note.y > window.innerHeight) {
                     note.element.remove();
                     gameState.notes.splice(index, 1);
-                    
-                    // Count as miss if not hit
-                    if (note.active) {
-                        gameState.missHits++;
-                        gameState.combo = 0;
-                        
-                        // Lose life on miss
-                        gameState.lives--;
-                        updateUI();
-                        
-                        if (gameState.lives <= 0) {
-                            gameOver();
-                        }
-                    }
-                }
-            });
-        }
-        
-        function checkMissedNotes() {
-            const hitLineY = document.getElementById('game-area').offsetHeight - 100;
-            
-            gameState.notes.forEach((note, index) => {
-                if (note.active && note.y > hitLineY + 50) {
-                    // Note missed
-                    note.active = false;
-                    gameState.missHits++;
+                    gameState.lives--;
                     gameState.combo = 0;
-                    
-                    // Visual feedback
-                    note.element.style.background = '#FF0000';
-                    setTimeout(() => {
-                        if (note.element && note.element.parentNode) {
-                            note.element.remove();
-                        }
-                    }, 200);
+                    updateUI();
+                    if (gameState.lives <= 0) gameOver();
                 }
             });
         }
         
         function handleInput(lane) {
-            const hitLineY = document.getElementById('game-area').offsetHeight - 100;
-            let closestNote = null;
-            let closestDistance = Infinity;
-            
-            // Find closest note in this lane
-            gameState.notes.forEach(note => {
-                if (note.lane === lane && note.active) {
-                    const distance = Math.abs(note.y - hitLineY);
-                    if (distance < closestDistance) {
-                        closestDistance = distance;
-                        closestNote = note;
-                    }
-                }
-            });
-            
-            if (closestNote && closestDistance < 80) {
-                // Hit!
-                closestNote.active = false;
-                let hitType, points;
-                
-                if (closestDistance < 20) {
-                    hitType = 'perfect';
-                    points = 100;
-                    gameState.perfectHits++;
-                } else if (closestDistance < 50) {
-                    hitType = 'good';
-                    points = 50;
-                    gameState.goodHits++;
-                } else {
-                    hitType = 'miss';
-                    points = 0;
-                    gameState.missHits++;
-                    gameState.combo = 0;
-                    
-                    // Lose life on miss
-                    gameState.lives--;
-                    updateUI();
-                    
-                    if (gameState.lives <= 0) {
-                        gameOver();
-                        return;
-                    }
-                }
-                
-                if (hitType !== 'miss') {
-                    gameState.combo++;
-                    gameState.score += points + (gameState.combo * 10);
-                    
-                    // Music layer activation feedback
-                    if (gameState.perfectHits === 4) {
-                        showPerfectIndicator('🎶 MELODY UNLOCKED!');
-                    }
-                    if (gameState.combo === 9) {
-                        showPerfectIndicator('🎵 HARMONY ADDED!');
-                    }
-                    if (gameState.combo === 16) {
-                        showPerfectIndicator('🎤 VOCAL LINE ACTIVATED!');
-                    }
-                }
-                
-                // Visual feedback
-                showHitEffect(lane, hitType);
-                
-                // Audio feedback
-                playHitSound(hitType);
-                
-                // Remove note element
-                closestNote.element.remove();
-                
-                updateUI();
-            }
-        }
-        
-        function showHitEffect(lane, hitType) {
-            const color = hitType === 'perfect' ? '#00FF00' : hitType === 'good' ? '#FFFF00' : '#FF0000';
-            const text = hitType === 'perfect' ? 'PERFECT!' : hitType === 'good' ? 'GOOD!' : 'MISS!';
-            
-            showPerfectIndicator(text);
-        }
-        
-        function showPerfectIndicator(text) {
-            const indicator = document.createElement('div');
-            indicator.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: #FFFF00;
-                font-size: 2rem;
-                font-weight: bold;
-                text-shadow: 0 0 20px #FFFF00;
-                z-index: 2000;
-                pointer-events: none;
-                animation: fadeOut 1s ease-out;
-            `;
-            indicator.textContent = text;
-            document.body.appendChild(indicator);
-            
-            setTimeout(() => {
-                if (indicator.parentNode) {
-                    indicator.remove();
-                }
-            }, 1000);
-        }
-        
-        function levelUp() {
-            gameState.level++;
-            gameState.bpm = Math.min(gameState.bpm + 5, 150); // Max 150 BPM
-            gameState.beatInterval = (60 / gameState.bpm) * 1000;
-            gameState.noteSpeed += 20;
-            
-            showPerfectIndicator(`🎵 LEVEL ${gameState.level}! 🎵`);
-            
-            // Track level up
-            window.trackEvent('level_up', {
-                level: gameState.level,
-                bpm: gameState.bpm,
-                score: gameState.score
-            });
-        }
-        
-        function moveNotes() {
-            const gameArea = document.getElementById('game-area');
-            const gameAreaHeight = gameArea.offsetHeight;
-            const speed = gameState.noteSpeed / 60; // pixels per frame (60fps)
-            
-            gameState.notes = gameState.notes.filter(note => {
-                note.y += speed;
-                
-                if (note.element && note.element.parentNode) {
-                    note.element.style.top = note.y + 'px';
-                }
-                
-                // Remove notes that have passed the bottom
-                if (note.y > gameAreaHeight) {
-                    if (note.element && note.element.parentNode) {
-                        note.element.remove();
-                    }
-                    return false;
-                }
-                
-                return true;
-            });
-        }
-        
-        function checkMissedNotes() {
-            const hitLineY = document.querySelector('.hit-line').offsetTop;
-            const missThreshold = 100; // pixels past hit line = miss
-            
-            gameState.notes = gameState.notes.filter(note => {
-                if (note.y > hitLineY + missThreshold) {
-                    // Note missed
-                    handleMiss(note.lane);
-                    if (note.element && note.element.parentNode) {
-                        note.element.remove();
-                    }
-                    return false;
-                }
-                return true;
-            });
-        }
-        
-        function handleHit(lane) {
-            const hitLineY = document.querySelector('.hit-line').offsetTop;
-            let bestNote = null;
+            if (!gameState.gameActive) return;
+            console.log(`👆 Input detected on lane ${lane}`);
+            const hitLineY = window.innerHeight - 160;
+            let hitNote = null;
             let bestDistance = Infinity;
-            
-            // Find the note closest to the hit line in this lane
-            gameState.notes.forEach(note => {
-                if (note.lane === parseInt(lane)) {
+            gameState.notes.forEach((note, index) => {
+                if (note.lane === lane) {
                     const distance = Math.abs(note.y - hitLineY);
-                    if (distance < bestDistance) {
+                    if (distance < 50 && distance < bestDistance) {
+                        hitNote = { note, index };
                         bestDistance = distance;
-                        bestNote = note;
                     }
                 }
             });
-            
-            if (!bestNote) return;
-            
-            // Remove the note
-            gameState.notes = gameState.notes.filter(n => n !== bestNote);
-            if (bestNote.element && bestNote.element.parentNode) {
-                bestNote.element.remove();
-            }
-            
-            // Determine hit quality
-            let hitType, points;
-            if (bestDistance < 25) {
-                hitType = 'perfect';
-                points = 100;
-                gameState.perfectHits++;
-            } else if (bestDistance < 50) {
-                hitType = 'good';
-                points = 50;
-                gameState.goodHits++;
-            } else {
-                hitType = 'miss';
-                points = 0;
-                gameState.missHits++;
-                gameState.combo = 0;
+            if (hitNote) {
+                hitNote.note.element.remove();
+                gameState.notes.splice(hitNote.index, 1);
                 
-                // LOSE LIFE ON MISS
-                gameState.lives--;
-                updateUI();
+                // Determinar tipo de hit
+                const hitType = bestDistance < 20 ? "PERFECT" : "GOOD";
+                const scoreAdd = hitType === "PERFECT" ? 150 : 100;
                 
-                // SCREEN SHAKE on damage
-                document.body.style.animation = 'shake 0.3s';
-                setTimeout(() => document.body.style.animation = '', 300);
-                
-                // CHECK GAME OVER
-                if (gameState.lives <= 0) {
-                    gameOver();
-                    return;
-                }
-            }
-            
-            if (hitType !== 'miss') {
+                gameState.score += scoreAdd;
                 gameState.combo++;
-                gameState.score += points + (gameState.combo * 10);
+                if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
                 
-                // 🎵 MUSIC LAYER ACTIVATION FEEDBACK
-                if (gameState.perfectHits === 4) {
-                    showPerfectIndicator('🎶 MELODY UNLOCKED!');
-                }
-                if (gameState.combo === 9) {
-                    showPerfectIndicator('🎵 HARMONY ADDED!');
-                }
-                if (gameState.combo === 16) {
-                    showPerfectIndicator('🎤 VOCAL LINE ACTIVATED!');
+                if (hitType === "PERFECT") {
+                    gameState.perfectHits++;
+                    showPerfectIndicator(lane);
+                } else {
+                    gameState.goodHits++;
                 }
                 
-                // Combo milestones
-                if (gameState.combo === 25 || gameState.combo === 50 || gameState.combo === 100) {
-                    showPerfectIndicator(`${gameState.combo}x COMBO!`);
-                    window.trackEvent('combo_milestone_reached', {
-                        combo: gameState.combo,
-                        level: gameState.level
-                    });
+                console.log(`✅ ${hitType}! Score: ${gameState.score}, Combo: ${gameState.combo}`);
+                
+                // Efectos visuales
+                showHitEffect(lane);
+                showComboText(lane, gameState.combo, hitType);
+                
+                // Screen shake en combos altos
+                if (gameState.combo % 10 === 0 && gameState.combo > 0) {
+                    document.body.classList.add("screen-shake");
+                    setTimeout(() => document.body.classList.remove("screen-shake"), 300);
                 }
+                
+                // Sonido con pitch según combo
+                playSound(523.25 + lane * 100 + gameState.combo * 5, 0.3, "sine", 0.2);
+            } else {
+                gameState.combo = 0;
+                console.log(`❌ MISS on lane ${lane}`);
             }
             
-            // Show hit effect
-            showHitEffect(lane, hitType);
-            
-            // Play sound
-            playHitSound(hitType);
-            
-            // Track hit
-            window.trackEvent(`${hitType}_hit`, {
-                lane: lane,
-                combo: gameState.combo,
-                level: gameState.level
-            });
-            
-            updateAccuracy();
-        }
+            updateUI();        }
         
-        function handleMiss(lane) {
-            gameState.missHits++;
-            gameState.combo = 0;
-            showHitEffect(lane, 'miss');
-            playHitSound('miss');
+        function showHitEffect(lane) {
+            const laneElement = document.querySelector(`[data-lane="${lane}"]`);
             
-            window.trackEvent('miss_hit', {
-                lane: lane,
-                level: gameState.level
-            });
+            // Flash de la lane
+            laneElement.classList.add("lane-flash");
+            setTimeout(() => laneElement.classList.remove("lane-flash"), 200);
             
-            updateAccuracy();
-        }
-        
-        function showHitEffect(lane, type) {
-            const gameArea = document.getElementById('game-area');
-            const laneElement = gameArea.querySelector(`[data-lane="${lane}"]`);
+            // Hit blast circular
+            const blast = document.createElement("div");
+            blast.className = "hit-blast";
+            blast.style.left = (lane * 25 + 12.5) + "%";
+            blast.style.bottom = "80px";
+            document.getElementById("gameArea").appendChild(blast);
+            setTimeout(() => blast.remove(), 300);
             
-            const effect = document.createElement('div');
-            effect.className = `hit-effect ${type}`;
-            laneElement.appendChild(effect);
-            
-            setTimeout(() => {
-                if (effect.parentNode) {
-                    effect.remove();
-                }
-            }, 300);
-            
-            // Perfect hit particles
-            if (type === 'perfect') {
-                createPerfectParticles(lane);
-            }
-        }
-        
-        function createPerfectParticles(lane) {
-            const gameArea = document.getElementById('game-area');
-            const laneElement = gameArea.querySelector(`[data-lane="${lane}"]`);
-            const rect = laneElement.getBoundingClientRect();
-            
+            // Partículas
             for (let i = 0; i < 8; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle perfect-burst';
+                const particle = document.createElement("div");
+                particle.className = "particle";
+                particle.style.left = (lane * 25 + 12.5) + "%";
+                particle.style.bottom = "80px";
+                particle.style.background = ["#FF0080", "#00FFFF", "#FFFF00", "#FF6600"][Math.floor(Math.random() * 4)];
+                document.getElementById("gameArea").appendChild(particle);
                 
-                const angle = (i / 8) * Math.PI * 2;
-                const dx = Math.cos(angle) * 50 + 'px';
-                const dy = Math.sin(angle) * 50 + 'px';
-                
-                particle.style.left = '50%';
-                particle.style.bottom = '60px';
-                particle.style.setProperty('--dx', dx);
-                particle.style.setProperty('--dy', dy);
-                
-                laneElement.appendChild(particle);
-                
-                setTimeout(() => {
-                    if (particle.parentNode) {
+                const angle = (i * 45) * Math.PI / 180;
+                const speed = 50 + Math.random() * 30;
+                let x = 0, y = 0;
+                const animateParticle = () => {
+                    x += Math.cos(angle) * 2;
+                    y += Math.sin(angle) * 2;
+                    particle.style.transform = `translate(${x}px, ${-y}px)`;
+                    particle.style.opacity = Math.max(0, 1 - Math.sqrt(x*x + y*y) / speed);
+                    if (particle.style.opacity > 0) {
+                        requestAnimationFrame(animateParticle);
+                    } else {
                         particle.remove();
                     }
-                }, 1000);
+                };
+                requestAnimationFrame(animateParticle);
             }
-        }
-        
-        function levelUp() {
-            gameState.level++;
-            gameState.bpm = Math.min(150, 90 + (gameState.level - 1) * 3); // Increase BPM
-            gameState.beatInterval = (60 / gameState.bpm) * 1000;
-            gameState.noteSpeed = 200 + (gameState.level - 1) * 10; // Increase speed
-            
-            showPerfectIndicator(`LEVEL ${gameState.level}!`);
-            
-            // Restart background music with new BPM
-            stopBackgroundMusic();
-            setTimeout(() => {
-                if (gameState.gameActive) {
-                    playBackgroundMusic();
-                }
-            }, 100);
-            
-            window.trackEvent('level_unlocked', {
-                level: gameState.level,
-                bpm: gameState.bpm,
-                score: gameState.score
+        }        
+        function setupControls() {
+            const touchZones = document.querySelectorAll('.touch-zone');
+            touchZones.forEach((zone) => {
+                const lane = parseInt(zone.dataset.lane);
+                zone.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(lane); }, { passive: false });
+                zone.addEventListener('click', (e) => { e.preventDefault(); handleInput(lane); });
             });
-        }
-        
-        function updateAccuracy() {
-            const totalHits = gameState.perfectHits + gameState.goodHits + gameState.missHits;
-            if (totalHits > 0) {
-                gameState.accuracy = ((gameState.perfectHits + gameState.goodHits) / totalHits) * 100;
-            }
-        }
-        
-        function showPerfectIndicator(text) {
-            // Remove existing indicators
-            const existing = document.querySelectorAll('.perfect-indicator');
-            existing.forEach(el => el.remove());
-            
-            const indicator = document.createElement('div');
-            indicator.className = 'perfect-indicator';
-            indicator.textContent = text;
-            document.body.appendChild(indicator);
-            
-            setTimeout(() => {
-                if (indicator.parentNode) {
-                    indicator.remove();
-                }
-            }, 1000);
+            console.log('✅ Touch controls setup complete');
         }
         
         function updateUI() {
-            document.getElementById('score').textContent = gameState.score;
-            document.getElementById('combo').textContent = gameState.combo;
-            document.getElementById('level').textContent = gameState.level;
-            document.getElementById('bpm').textContent = gameState.bpm;
-            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById("score").textContent = `SCORE: ${gameState.score}`;
+            document.getElementById("lives").textContent = `❤️ ${gameState.lives}`;
             
-            // COLOR CHANGE based on lives
-            const livesElement = document.getElementById('lives');
-            if (gameState.lives <= 1) {
-                livesElement.style.color = '#FF0000';
-                livesElement.style.animation = 'pulse 0.5s infinite';
-            } else if (gameState.lives <= 2) {
-                livesElement.style.color = '#FF6B6B';
+            const comboElement = document.getElementById("combo");
+            comboElement.textContent = `COMBO: ${gameState.combo}`;
+            
+            // Color dinámico del combo
+            if (gameState.combo >= 50) {
+                comboElement.style.color = "#FF0080";
+                comboElement.style.textShadow = "0 0 10px #FF0080";
+                comboElement.style.animation = "pulse 0.5s infinite";
+            } else if (gameState.combo >= 30) {
+                comboElement.style.color = "#FFFF00";
+                comboElement.style.textShadow = "0 0 10px #FFFF00";
+                comboElement.style.animation = "pulse 1s infinite";
+            } else if (gameState.combo >= 15) {
+                comboElement.style.color = "#00FFFF";
+                comboElement.style.textShadow = "0 0 5px #00FFFF";
+                comboElement.style.animation = "none";
             } else {
-                livesElement.style.color = '#00FF00';
+                comboElement.style.color = "#00FFFF";
+                comboElement.style.textShadow = "none";
+                comboElement.style.animation = "none";
             }
-        }
-        
+        }        
         function gameOver() {
             gameState.gameActive = false;
-            stopBackgroundMusic();
-            
-            // Update best score
-            if (gameState.score > gameState.bestScore) {
-                gameState.bestScore = gameState.score;
-                localStorage.setItem('beatStageBestScore', gameState.bestScore);
-            }
-            
-            // Analytics event
-            window.trackEvent('game_over', {
-                final_score: gameState.score,
-                level_reached: gameState.level,
-                combo_max: gameState.combo,
-                perfect_hits: gameState.perfectHits,
-                accuracy: ((gameState.perfectHits + gameState.goodHits) / gameState.totalNotes * 100).toFixed(1)
-            });
-            
-            // SHOW VIRAL GAME OVER SCREEN
+            console.log("💀 GAME OVER");
             showViralGameOverScreen();
         }
-        
-        // ========== VIRAL GAME OVER SCREEN ==========
+
         function showViralGameOverScreen() {
-            const accuracy = gameState.totalNotes > 0 ? ((gameState.perfectHits + gameState.goodHits) / gameState.totalNotes * 100).toFixed(1) : 0;
-            const isRecord = gameState.score === gameState.bestScore;
-            
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.9); z-index: 2000;
-                display: flex; align-items: center; justify-content: center;
-            `;
-            
-            modal.innerHTML = `
-                <div style="background: linear-gradient(135deg, #1a1a1a, #2a1a2a); padding: 30px; border-radius: 15px; text-align: center; border: 2px solid #00FFFF; max-width: 90vw;">
-                    <h2 style="color: #FF0080; margin: 0 0 20px 0; font-size: 2rem;">🎵 GAME OVER! 🎵</h2>
-                    <div style="color: #00FFFF; font-size: 1.3rem; margin: 10px 0;">SCORE: ${gameState.score}</div>
-                    <div style="color: #FFFF00; font-size: 1.1rem; margin: 10px 0;">LEVEL: ${gameState.level}</div>
-                    <div style="color: #39FF14; font-size: 1.1rem; margin: 10px 0;">COMBO MAX: ${gameState.combo}</div>
-                    <div style="color: #8A2BE2; font-size: 1rem; margin: 10px 0;">ACCURACY: ${accuracy}%</div>
-                    ${isRecord ? '<div style="color: #FFD700; font-size: 1.2rem; margin: 15px 0; animation: pulse 1s infinite;">🏆 NEW RECORD! 🏆</div>' : ''}
-                    
-                    <div style="margin: 25px 0 15px 0; color: #FFD700; font-weight: bold; font-size: 1.2rem;">💰 CONTINUE PLAYING? 💰</div>
-                    
-                    <button onclick="watchAdToContinue()" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; border: none; padding: 18px 30px; margin: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(255,215,0,0.4); animation: pulse 2s infinite;">🎬 WATCH AD TO CONTINUE</button>
-                    
-                    <div style="margin: 20px 0 10px 0; color: #FF6B6B; font-weight: bold;">OR SHARE YOUR EPIC SCORE!</div>
-                    
-                    <button onclick="shareNeonBeatNative()" style="background: #00FFFF; color: #000; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">📱 SHARE</button>
-                    <button onclick="copyNeonBeatViralMessage()" style="background: #FF0080; color: #fff; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">📋 COPY</button>
-                    <button onclick="generateNeonBeatImage()" style="background: #39FF14; color: #000; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">📸 IMAGE</button>
-                    
-                    <div style="margin-top: 20px;">
-                        <button onclick="restartGame(); document.body.removeChild(this.closest('div').parentNode)" style="background: #8A2BE2; color: #fff; border: none; padding: 12px 25px; margin: 8px; border-radius: 8px; font-weight: bold; cursor: pointer;">🎮 RESTART</button>
-                        <button onclick="showMenu(); document.body.removeChild(this.closest('div').parentNode)" style="background: #666; color: #fff; border: none; padding: 12px 25px; margin: 8px; border-radius: 8px; font-weight: bold; cursor: pointer;">🏠 MENU</button>
-                    </div>
-                </div>
-            `;
-            
+            const modal = document.createElement("div");
+            modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000;";
+            modal.innerHTML = `<div style="background: linear-gradient(145deg, #1a1a2e, #16213e); padding: 30px; border-radius: 20px; text-align: center; border: 3px solid #00FFFF; box-shadow: 0 0 30px #FF0080; max-width: 90%;"><h2 style="color: #FF0080; margin: 20px 0;">🎮 GAME OVER! 🎮</h2><div style="margin: 20px 0; color: white;"><p>🎯 Score: ${gameState.score}</p><p>🔥 Max Combo: ${gameState.combo}</p><p>✨ Notes Hit: ${Math.floor(gameState.score / 100)}</p></div><button onclick="shareNeonBeat()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF0080, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📱 SHARE SCORE</button><button onclick="copyNeonBeatMessage()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FFFF00, #FF0080); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📋 COPY MESSAGE</button><button onclick="watchAdToContinue(event)" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF6600, #FFFF00); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🎬 WATCH AD TO CONTINUE</button><button onclick="location.reload()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #8A2BE2, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🔄 NEW GAME</button></div>`;
             document.body.appendChild(modal);
         }
-        
-        function restartGame() {
-            // Reset game state
-            gameState.score = 0;
-            gameState.combo = 0;
-            gameState.level = 1;
-            gameState.bpm = 90;
-            gameState.perfectHits = 0;
-            gameState.goodHits = 0;
-            gameState.missHits = 0;
-            gameState.totalNotes = 0;
-            gameState.lives = 3;
-            gameState.health = 100;
-            gameState.notes = [];
-            
-            startGame();
-        }
-        
-        // ========== VIRAL SHARING FUNCTIONS ==========
-        function shareNeonBeatNative() {
-            const accuracy = gameState.totalNotes > 0 ? ((gameState.perfectHits + gameState.goodHits) / gameState.totalNotes * 100).toFixed(1) : 0;
-            const shareData = {
-                title: '🎵 Neon Beat Stage - Epic Score!',
-                text: `🎯 Score: ${gameState.score} puntos\n🎵 Level: ${gameState.level}\n🎯 Accuracy: ${accuracy}%\n🎮 ¿Puedes superarme?\n\nJuega GRATIS aquí:`,
-                url: 'https://neon-beat-stage.netlify.app'
-            };
-            
+
+        function shareNeonBeat() {
+            const shareText = `🎵 ¡Conseguí ${gameState.score} puntos en Neon Beat Stage! 🎵\n\n🔥 Max Combo: ${gameState.combo}x\n✨ Notes Hit: ${Math.floor(gameState.score / 100)}\n🎮 ¿Puedes superarme?\n\nhttps://neon-beat-stage.netlify.app`;
             if (navigator.share) {
-                navigator.share(shareData);
+                navigator.share({ title: "Neon Beat Stage - K-pop Rhythm Game", text: shareText, url: "https://neon-beat-stage.netlify.app" });
             } else {
-                copyNeonBeatViralMessage();
+                copyNeonBeatMessage();
             }
         }
-        
-        function copyNeonBeatViralMessage() {
-            const accuracy = gameState.totalNotes > 0 ? ((gameState.perfectHits + gameState.goodHits) / gameState.totalNotes * 100).toFixed(1) : 0;
-            const isRecord = gameState.score === gameState.bestScore;
-            
-            const viralMessage = `🎵 ¡EPIC SCORE EN NEON BEAT STAGE! 🎵
-🎯 Mi puntuación: ${gameState.score} puntos
-🎵 Nivel alcanzado: ${gameState.level}
-🎯 Precision: ${accuracy}%
-🔥 Combo máximo: ${gameState.combo}x
-${isRecord ? '🏆 ¡NUEVO RÉCORD PERSONAL!' : ''}
 
-🎮 ¿PUEDES SUPERAR MI RITMO?
-¡Prueba este rhythm game GRATIS! 👇
-https://neon-beat-stage.netlify.app
-
-#NeonBeatStage #RhythmGame #Gaming #Challenge #Adictivo #LIPA`;
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(viralMessage).then(() => {
-                    alert('🎵 Mensaje copiado! Pégalo en tus redes sociales! 🔥');
+        function copyNeonBeatMessage() {
+            const viralText = `🎵 ¡Conseguí ${gameState.score} puntos en Neon Beat Stage! 🎵\n\n🔥 Max Combo: ${gameState.combo}x\n✨ Perfect Hits: ${Math.floor(gameState.score / 100)}\n🎮 ¿Puedes superarme?\n\nJuega aquí: https://neon-beat-stage.netlify.app\n\n#NeonBeatStage #KpopRhythm #CyberpunkGame`;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(viralText).then(() => {
+                    showNotification("📋 ¡Mensaje copiado! Pégalo en tus redes sociales 🚀");
                 });
             } else {
-                // Fallback
-                const textArea = document.createElement('textarea');
-                textArea.value = viralMessage;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('🎵 Mensaje copiado! Pégalo en tus redes sociales! 🔥');
+                alert("📋 " + viralText);
             }
         }
-        
-        function generateNeonBeatImage() {
-            // Create canvas for image generation
-            const canvas = document.createElement('canvas');
-            canvas.width = 800;
-            canvas.height = 600;
-            const ctx = canvas.getContext('2d');
-            
-            // Background gradient
-            const gradient = ctx.createLinearGradient(0, 0, 800, 600);
-            gradient.addColorStop(0, '#0a0a0a');
-            gradient.addColorStop(0.5, '#1a0a1a');
-            gradient.addColorStop(1, '#0a1a1a');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 800, 600);
-            
-            // Title
-            ctx.fillStyle = '#FF0080';
-            ctx.font = 'bold 48px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('NEON BEAT STAGE', 400, 100);
-            
-            // Stats
-            const accuracy = gameState.totalNotes > 0 ? ((gameState.perfectHits + gameState.goodHits) / gameState.totalNotes * 100).toFixed(1) : 0;
-            ctx.fillStyle = '#00FFFF';
-            ctx.font = 'bold 36px Arial';
-            ctx.fillText(`SCORE: ${gameState.score}`, 400, 200);
-            
-            ctx.fillStyle = '#FFFF00';
-            ctx.font = 'bold 28px Arial';
-            ctx.fillText(`Level: ${gameState.level} | Accuracy: ${accuracy}%`, 400, 260);
-            
-            ctx.fillStyle = '#39FF14';
-            ctx.fillText(`Max Combo: ${gameState.combo}x`, 400, 320);
-            
-            // Record indicator
-            if (gameState.score === gameState.bestScore) {
-                ctx.fillStyle = '#FFD700';
-                ctx.font = 'bold 32px Arial';
-                ctx.fillText('🏆 NEW RECORD! 🏆', 400, 380);
-            }
-            
-            // URL
-            ctx.fillStyle = '#8A2BE2';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('neon-beat-stage.netlify.app', 400, 500);
-            
-            // Convert to downloadable image
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `neon-beat-score-${gameState.score}.png`;
-                a.click();
-                URL.revokeObjectURL(url);
-                
-                alert('🎵 Score image generated! Share it on social media! 🔥');
-                window.trackEvent('share_image_generated', {
-                    score: gameState.score,
-                    method: 'canvas_download'
-                });
-            });
-        }
-        
-        // ========== REWARDED ADS SYSTEM ==========
-        function watchAdToContinue() {
-            // Track rewarded ad attempt
-            window.trackEvent('rewarded_ad_requested', {
-                score: gameState.score,
-                level: gameState.level,
-                lives_lost: gameState.maxLives - gameState.lives
-            });
-            
-            // Show loading state
+
+        function watchAdToContinue(event) {
             const button = event.target;
-            const originalText = button.innerHTML;
-            button.innerHTML = '⏳ LOADING AD...';
+            button.textContent = "⏳ LOADING AD...";
             button.disabled = true;
-            
-            // H5 Games Ads API - Rewarded Video
-            if (window.adBreak) {
-                window.adBreak({
-                    type: 'reward',
-                    name: 'continue-playing',
-                    beforeAd: () => {
-                        console.log('🎬 Rewarded ad starting...');
-                        // Pause game audio
-                        stopBackgroundMusic();
-                    },
-                    afterAd: () => {
-                        console.log('✅ Rewarded ad completed!');
-                        // Grant reward - Continue with 2 lives
-                        continueWithReward();
-                    },
-                    adDismissed: () => {
-                        console.log('❌ Rewarded ad dismissed');
-                        // Reset button
-                        button.innerHTML = originalText;
-                        button.disabled = false;
-                        
-                        // Show message
-                        alert('⚠️ You need to watch the complete ad to continue playing!');
-                    },
-                    adViewed: () => {
-                        console.log('👁️ Rewarded ad viewed');
-                        // Track successful view
-                        window.trackEvent('rewarded_ad_completed', {
-                            score: gameState.score,
-                            reward_type: 'continue_playing'
-                        });
-                    }
-                });
-            } else {
-                // Fallback - Simulate ad for testing
-                simulateRewardedAd(button, originalText);
-            }
-        }
-        
-        function simulateRewardedAd(button, originalText) {
-            console.log('🧪 Simulating rewarded ad (no ad network available)');
-            
-            // Simulate 3 second ad
-            let countdown = 3;
-            const interval = setInterval(() => {
-                button.innerHTML = `🎬 AD PLAYING... ${countdown}s`;
-                countdown--;
-                
-                if (countdown < 0) {
-                    clearInterval(interval);
-                    button.innerHTML = '✅ AD COMPLETE!';
-                    
-                    setTimeout(() => {
-                        continueWithReward();
-                    }, 1000);
-                }
+            setTimeout(() => {
+                button.textContent = "🎬 AD PLAYING...";
+                setTimeout(() => {
+                    gameState.lives = 2;
+                    gameState.gameActive = true;
+                    gameState.notes.forEach(note => {
+                        if (note.element && note.element.parentNode) {
+                            note.element.parentNode.removeChild(note.element);
+                        }
+                    });
+                    gameState.notes = [];
+                    gameState.frameCount = 0;
+                    updateUI();
+                    document.querySelector(`[style*="position: fixed"]`).remove();
+                    showNotification("🎬 AD REWARD: +2 LIVES! ❤️");
+                    gameLoop();
+                }, 3000);
             }, 1000);
         }
-        
-        function continueWithReward() {
-            // Grant reward: 2 lives to continue
-            gameState.lives = 2;
-            gameState.health = 100;
-            
-            // Close game over modal
-            const modal = document.querySelector('[style*="rgba(0,0,0,0.9)"]');
-            if (modal) {
-                document.body.removeChild(modal);
-            }
-            
-            // Continue game
-            gameState.gameActive = true;
-            playBackgroundMusic();
-            updateUI();
-            
-            // Show reward notification
-            showPerfectIndicator('🎬 AD REWARD: +2 LIVES! 💚');
-            
-            // Track successful continue
-            window.trackEvent('game_continued_with_ad', {
-                score: gameState.score,
-                level: gameState.level,
-                lives_granted: 2
-            });
-            
-            console.log('🎮 Game continued with reward: 2 lives!');
+
+        function showPerfectIndicator(lane) {
+            const indicator = document.createElement("div");
+            indicator.className = "perfect-indicator";
+            indicator.textContent = "PERFECT!";
+            indicator.style.left = (lane * 25 + 12.5) + "%";
+            indicator.style.bottom = "120px";
+            document.getElementById("gameArea").appendChild(indicator);
+            setTimeout(() => indicator.remove(), 500);
         }
-        
-        // ========== GAME INITIALIZATION ==========
-        // startGame function is defined above (line 912)
-        
-        function showMenu() {
-            currentScreen = 'menu';
-            gameState.gameActive = false;
-            stopBackgroundMusic();
+
+        function showComboText(lane, combo, hitType) {
+            if (combo < 2) return;
             
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('menu-screen').classList.remove('hidden');
+            const comboText = document.createElement("div");
+            comboText.className = "combo-text";
             
-            // Update best score display
-            document.getElementById('best-score').textContent = gameState.bestScore;
+            let color = "#FFFFFF";
+            let emoji = "🎵";
+            if (combo >= 50) { color = "#FF0080"; emoji = "🔥"; }
+            else if (combo >= 30) { color = "#FFFF00"; emoji = "⚡"; }
+            else if (combo >= 15) { color = "#00FFFF"; emoji = "✨"; }
+            else if (combo >= 5) { color = "#FF6600"; emoji = "🎯"; }
+            
+            comboText.style.color = color;
+            comboText.style.textShadow = `0 0 10px ${color}`;
+            comboText.textContent = `${emoji} ${combo}x COMBO!`;
+            comboText.style.left = (lane * 25 + 12.5) + "%";
+            comboText.style.bottom = "160px";
+            
+            document.getElementById("gameArea").appendChild(comboText);
+            setTimeout(() => comboText.remove(), 1000);
         }
-        
-        // Initialize on page load
+        function showNotification(message) {
+            const notification = document.createElement("div");
+            notification.style.cssText = "position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(45deg, #FF0080, #00FFFF); color: white; padding: 15px 25px; border-radius: 25px; font-weight: bold; z-index: 10000; box-shadow: 0 0 20px #FF0080;";
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => { notification.remove(); }, 3000);
+        }        
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('best-score').textContent = gameState.bestScore;
-        });
-    </script>
-</body>
-</html>
-                });
-            } else {
-                copyViralMessage();
-            }
-            
-            window.trackEvent('share_attempted', {
-                method: 'native_share',
-                score: gameState.score
-            });
-        }
-        
-        function copyViralMessage() {
-            const accuracy = gameState.accuracy.toFixed(1);
-            const isRecord = gameState.score > (localStorage.getItem('neonBeatBestScore') || 0);
-            
-            const viralMessage = `🎵 NEON BEAT STAGE SCORE! 🎵
-
-🎯 Score: ${gameState.score} points
-🎼 Level ${gameState.level} completed
-⚡ ${gameState.bpm} BPM rhythm mastered
-🎯 ${accuracy}% accuracy achieved
-🔥 Max combo: ${gameState.combo}
-${isRecord ? '🏆 NEW PERSONAL RECORD!' : ''}
-
-🎮 Can you beat my K-pop rhythm skills?
-Play FREE here 👇
-${window.location.href}
-
-#NeonBeatStage #KpopGame #RhythmGame #LIPA`;
-            
-            navigator.clipboard.writeText(viralMessage).then(() => {
-                alert('🎵 Viral message copied! Paste it anywhere to share your score! 🔥');
-            });
-            
-            window.trackEvent('share_completed', {
-                method: 'copy_message',
-                score: gameState.score
-            });
-        }
-        
-        function generateScoreImage() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 400;
-            canvas.height = 600;
-            
-            // Background
-            const gradient = ctx.createLinearGradient(0, 0, 0, 600);
-            gradient.addColorStop(0, '#1a0a1a');
-            gradient.addColorStop(0.5, '#0a0a0a');
-            gradient.addColorStop(1, '#1a0a1a');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 400, 600);
-            
-            // Border
-            ctx.strokeStyle = '#FF0080';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(10, 10, 380, 580);
-            
-            // Title
-            ctx.fillStyle = '#FF0080';
-            ctx.font = 'bold 32px Orbitron, monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('NEON BEAT STAGE', 200, 80);
-            
-            // Score
-            ctx.fillStyle = '#FFFF00';
-            ctx.font = 'bold 48px Orbitron, monospace';
-            ctx.fillText(gameState.score, 200, 180);
-            
-            // Stats
-            ctx.fillStyle = '#00FFFF';
-            ctx.font = 'bold 20px Orbitron, monospace';
-            ctx.fillText(`Level ${gameState.level}`, 200, 240);
-            ctx.fillText(`${gameState.bpm} BPM`, 200, 270);
-            ctx.fillText(`${gameState.accuracy.toFixed(1)}% Accuracy`, 200, 300);
-            ctx.fillText(`${gameState.combo} Max Combo`, 200, 330);
-            
-            // Record indicator
-            const isRecord = gameState.score > (localStorage.getItem('neonBeatBestScore') || 0);
-            if (isRecord) {
-                ctx.fillStyle = '#39FF14';
-                ctx.font = 'bold 24px Orbitron, monospace';
-                ctx.fillText('🏆 NEW RECORD! 🏆', 200, 380);
-            }
-            
-            // Challenge text
-            ctx.fillStyle = '#8A2BE2';
-            ctx.font = 'bold 18px Orbitron, monospace';
-            ctx.fillText('Can you beat my rhythm?', 200, 450);
-            
-            // URL
-            ctx.fillStyle = '#39FF14';
-            ctx.font = '14px Orbitron, monospace';
-            ctx.fillText(window.location.href, 200, 520);
-            
-            // Convert to blob and download
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `neon-beat-${gameState.score}-level${gameState.level}.png`;
-                a.click();
-                URL.revokeObjectURL(url);
-                
-                alert('🎵 Score image generated! Share it on social media! 🔥');
-                window.trackEvent('share_image_generated', {
-                    score: gameState.score,
-                    method: 'canvas_download'
-                });
-            });
-        }
-        
-        // ========== CONTROLS ==========
-        function setupControls() {
-            // ========== MOBILE TOUCH OPTIMIZED ==========
-            const touchZones = document.querySelectorAll('.touch-zone');
-            touchZones.forEach((zone, index) => {
-                // TOUCHSTART - Primary mobile input
-                zone.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (gameState.gameActive) {
-                        const lane = parseInt(zone.dataset.lane);
-                        zone.classList.add('active');
-                        
-                        console.log(`🎵 TOUCH detected on lane ${lane}`);
-                        handleInput(lane);
-                        
-                        // Haptic feedback
-                        if (navigator.vibrate) {
-                            navigator.vibrate(30);
-                        }
-                    }
-                }, { passive: false });
-                
-                // TOUCHEND - Visual cleanup
-                zone.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    zone.classList.remove('active');
-                }, { passive: false });
-                
-                // PREVENT SCROLLING during gameplay
-                zone.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                }, { passive: false });
-                
-                // CLICK - Desktop fallback
-                zone.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (gameState.gameActive) {
-                        const lane = parseInt(zone.dataset.lane);
-                        zone.classList.add('active');
-                        
-                        console.log(`🖱️ CLICK detected on lane ${lane}`);
-                        handleInput(lane);
-                        setTimeout(() => zone.classList.remove('active'), 100);
-                    }
-                });
-                
-                // SUBTLE VISUAL FEEDBACK
-                zone.style.border = '1px solid rgba(0,255,255,0.1)';
-                zone.style.boxSizing = 'border-box';
-            });
-            
-            // Keyboard controls
-            document.addEventListener('keydown', (e) => {
-                if (!gameState.gameActive) return;
-                
-                let lane = -1;
-                switch(e.code) {
-                    case 'KeyA': lane = 0; break;
-                    case 'KeyS': lane = 1; break;
-                    case 'KeyD': lane = 2; break;
-                    case 'KeyF': lane = 3; break;
-                }
-                
-                if (lane >= 0) {
-                    e.preventDefault();
-                    const zone = document.querySelector(`[data-lane="${lane}"]`);
-                    zone.classList.add('active');
-                    handleHit(lane);
-                    setTimeout(() => zone.classList.remove('active'), 100);
-                }
-            });
-        }
-        
-        // ========== TUTORIAL ==========
-        function showTutorial() {
-            alert(`🎵 NEON BEAT STAGE TUTORIAL 🎵
-
-🎯 OBJECTIVE: Hit notes when they reach the glowing line!
-
-🎮 CONTROLS:
-📱 Mobile: Tap the 4 lanes when notes arrive
-🖥️ Desktop: Press A, S, D, F keys
-
-🏆 SCORING:
-• Perfect hit (yellow zone): 100 points
-• Good hit (wider zone): 50 points  
-• Miss: 0 points, breaks combo
-
-💫 COMBOS:
-• Build combos for bonus points!
-• Each combo hit = +10 extra points
-• Milestones at 25, 50, 100 combos
-
-📈 PROGRESSION:
-• Complete levels to increase BPM
-• Faster beats = higher scores!
-• Reach level 20 for maximum intensity!
-
-🎵 Ready to master the K-pop rhythm? 🎵`);
-        }
-        
-        function testAudio() {
-            console.log('Testing audio...');
-            
-            if (!audioContext) {
-                initAudio();
-            }
-            
-            if (audioContext) {
-                audioContext.resume().then(() => {
-                    playHitSound('perfect');
-                    setTimeout(() => playHitSound('good'), 200);
-                    setTimeout(() => playHitSound('miss'), 400);
-                    console.log('Audio test completed');
-                });
-            } else {
-                alert('Audio not available. Please check your browser settings.');
-            }
-        }
-        
-        // ========== INITIALIZATION ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Neon Beat Stage initializing...');
-            
-            setupControls();
-            
-            // Load best score
-            const bestScore = localStorage.getItem('neonBeatBestScore') || 0;
-            document.getElementById('best-score').textContent = bestScore;
-            
-            // Initialize AdSense
-            try {
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            } catch (e) {
-                console.log('AdSense initialization:', e);
-            }
-            
-            console.log('🎵 Neon Beat Stage ready to rock! 🎵');
-        });
-        
-        // ========== CROSS-PROMOTION ==========
-        const LIPAPortfolio = {
-            games: [
-                {name: "Stack Tower Neon", url: "https://stack-tower-neon2.netlify.app", hook: "From rhythm to precision!"},
-                {name: "Neon Runner", url: "https://neon-runner-lipastudios.netlify.app", hook: "From beats to speed!"}
-            ],
-            
-            showRotatingPromo() {
-                // Show after level completion randomly
-                if (Math.random() < 0.3 && gameState.level > 3) {
-                    const game = this.games[Math.floor(Math.random() * this.games.length)];
-                    setTimeout(() => {
-                        if (confirm(`🎮 ${game.hook}\n\nTry "${game.name}" next?\n\nClick OK to play now!`)) {
-                            window.open(game.url, '_blank');
-                        }
-                    }, 1000);
-                }
-            }
-        };
-        
-        // Show cross-promotion after game over sometimes
-        window.addEventListener('beforeunload', () => {
-            LIPAPortfolio.showRotatingPromo();
+            console.log('🚀 DOM loaded - Starting game...');
+            startGame();
         });
     </script>
 </body>
