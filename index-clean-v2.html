@@ -164,7 +164,7 @@
             background: linear-gradient(90deg, #FF0080, #00FFFF, #39FF14, #8A2BE2);
             box-shadow: 0 0 20px rgba(255, 0, 128, 0.8);
             animation: hitLinePulse 1s ease-in-out infinite;
-            z-index: 1000;
+            z-index: 30;
         }
         
         @keyframes hitLinePulse {
@@ -607,6 +607,7 @@
         }
     </style>
     <!-- FIXES QUE FUNCIONAN NEON BEAT v2.3 -->
+    <script src="neon-beat-working-fixes.js"></script>
 </head>
 <body>
     <!-- STAGE LIGHTING -->
@@ -1064,9 +1065,29 @@
             });
         }
         
+        function checkMissedNotes() {
+            const hitLineY = document.getElementById('game-area').offsetHeight - 100;
+            
+            gameState.notes.forEach((note, index) => {
+                if (note.active && note.y > hitLineY + 50) {
+                    // Note missed
+                    note.active = false;
+                    gameState.missHits++;
+                    gameState.combo = 0;
+                    
+                    // Visual feedback
+                    note.element.style.background = '#FF0000';
+                    setTimeout(() => {
+                        if (note.element && note.element.parentNode) {
+                            note.element.remove();
+                        }
+                    }, 200);
+                }
+            });
+        }
         
         function handleInput(lane) {
-            const hitLineY = document.querySelector('.hit-line').offsetTop;
+            const hitLineY = document.getElementById('game-area').offsetHeight - 100;
             let closestNote = null;
             let closestDistance = Infinity;
             
@@ -1211,6 +1232,22 @@
             });
         }
         
+        function checkMissedNotes() {
+            const hitLineY = document.querySelector('.hit-line').offsetTop;
+            const missThreshold = 100; // pixels past hit line = miss
+            
+            gameState.notes = gameState.notes.filter(note => {
+                if (note.y > hitLineY + missThreshold) {
+                    // Note missed
+                    handleMiss(note.lane);
+                    if (note.element && note.element.parentNode) {
+                        note.element.remove();
+                    }
+                    return false;
+                }
+                return true;
+            });
+        }
         
         function handleHit(lane) {
             const hitLineY = document.querySelector('.hit-line').offsetTop;
