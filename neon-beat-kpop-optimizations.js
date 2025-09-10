@@ -18,11 +18,11 @@ function captureKPopMoment() {
     link.href = dataURL;
     link.click();
     
-    // Mostrar prompt de sharing específico para K-pop
+    // Mostrar prompt de sharing específico para K-pop style
     showKPopSharePrompt();
 }
 
-// Prompt de sharing específico para K-pop y baile
+// Prompt de sharing específico para K-pop style y baile
 function showKPopSharePrompt() {
     const modal = document.createElement('div');
     modal.className = 'kpop-share-modal';
@@ -41,11 +41,11 @@ function showKPopSharePrompt() {
                 <h4>Hashtags K-POP sugeridos:</h4>
                 <div class="kpop-hashtags">
                     <span class="kpop-hashtag">#NeonBeatStage</span>
-                    <span class="kpop-hashtag">#KPopDance</span>
+                    <span class="kpop-hashtag">#RhythmGame</span>
                     <span class="kpop-hashtag">#RhythmGame</span>
                     <span class="kpop-hashtag">#DanceChallenge</span>
                     <span class="kpop-hashtag">#KPopViral</span>
-                    <span class="kpop-hashtag">#LasGuerrerasKPop</span>
+                    <span class="kpop-hashtag">#DanceChallenge</span>
                     <span class="kpop-hashtag">#DanceBattle</span>
                     <span class="kpop-hashtag">#LIPAStudios</span>
                 </div>
@@ -62,18 +62,18 @@ function showKPopSharePrompt() {
     setTimeout(() => modal.classList.add('show'), 100);
 }
 
-// Sharing específico para TikTok con temática K-pop
+// Sharing específico para TikTok con temática K-pop style
 function shareToTikTokKPop() {
     const combo = gameState.combo || 0;
     const score = gameState.score || 0;
-    const text = `🎤 ¡Acabo de hacer un combo de ${combo} en Neon Beat Stage! ¿Puedes superar mi coreografía K-pop? #NeonBeatStage #KPopDance #DanceChallenge #LasGuerrerasKPop #TikTokGaming`;
+    const text = `🎤 ¡Acabo de hacer un combo de ${combo} en Neon Beat Stage! ¿Puedes superar mi coreografía K-pop style? #NeonBeatStage #RhythmGame #DanceChallenge #DanceChallenge #TikTokGaming`;
     const url = window.location.href;
     
     // Abrir TikTok con el texto pre-formateado
     const shareUrl = `https://www.tiktok.com/upload?text=${encodeURIComponent(text)}`;
     window.open(shareUrl, '_blank');
     
-    // Tracking específico para K-pop
+    // Tracking específico para K-pop style
     window.trackEvent('tiktok_kpop_share_attempt', {
         combo: combo,
         score: score,
@@ -83,12 +83,12 @@ function shareToTikTokKPop() {
     closeKPopShareModal();
 }
 
-// Sharing específico para Instagram con temática K-pop
+// Sharing específico para Instagram con temática K-pop style
 function shareToInstagramKPop() {
     const combo = gameState.combo || 0;
     const score = gameState.score || 0;
     
-    // Crear imagen optimizada para Instagram Stories con temática K-pop
+    // Crear imagen optimizada para Instagram Stories con temática K-pop style
     const canvas = document.getElementById('gameCanvas');
     if (canvas) {
         const dataURL = canvas.toDataURL('image/png');
@@ -106,11 +106,11 @@ function shareToInstagramKPop() {
             // Dibujar el juego escalado
             ctx2.drawImage(img, 0, 0, 1080, 1920);
             
-            // Añadir overlay con temática K-pop
+            // Añadir overlay con temática K-pop style
             ctx2.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx2.fillRect(0, 0, 1080, 1920);
             
-            // Título K-pop
+            // Título K-pop style
             ctx2.fillStyle = '#FF0080';
             ctx2.font = 'bold 80px Arial';
             ctx2.textAlign = 'center';
@@ -126,8 +126,8 @@ function shareToInstagramKPop() {
             ctx2.fillStyle = '#FFD700';
             ctx2.font = 'bold 40px Arial';
             ctx2.fillText(`#NeonBeatStage`, 540, 1100);
-            ctx2.fillText(`#KPopDance`, 540, 1200);
-            ctx2.fillText(`#LasGuerrerasKPop`, 540, 1300);
+            ctx2.fillText(`#RhythmGame`, 540, 1200);
+            ctx2.fillText(`#DanceChallenge`, 540, 1300);
             
             // Descargar imagen optimizada
             const link = document.createElement('a');
@@ -151,7 +151,7 @@ function showKPopInstagramInstructions() {
             <div class="kpop-steps">
                 <div class="kpop-step">
                     <span class="kpop-step-number">1</span>
-                    <p>La imagen K-pop optimizada se ha descargado</p>
+                    <p>La imagen K-pop style optimizada se ha descargado</p>
                 </div>
                 <div class="kpop-step">
                     <span class="kpop-step-number">2</span>
@@ -163,7 +163,7 @@ function showKPopInstagramInstructions() {
                 </div>
                 <div class="kpop-step">
                     <span class="kpop-step-number">4</span>
-                    <p>Añade los hashtags: #NeonBeatStage #KPopDance #LasGuerrerasKPop</p>
+                    <p>Añade los hashtags: #NeonBeatStage #RhythmGame #DanceChallenge</p>
                 </div>
                 <div class="kpop-step">
                     <span class="kpop-step-number">5</span>
@@ -177,11 +177,11 @@ function showKPopInstagramInstructions() {
     setTimeout(() => modal.classList.add('show'), 100);
 }
 
-// Sharing específico para YouTube con temática K-pop
+// Sharing específico para YouTube con temática K-pop style
 function shareToYouTubeKPop() {
     const combo = gameState.combo || 0;
     const score = gameState.score || 0;
-    const text = `🎤 ¡Increíble coreografía K-pop de ${combo} combo en Neon Beat Stage! ¿Puedes superar mi baile? #NeonBeatStage #KPopDance #DanceChallenge #LasGuerrerasKPop #YouTubeGaming`;
+    const text = `🎤 ¡Increíble coreografía K-pop style de ${combo} combo en Neon Beat Stage! ¿Puedes superar mi baile? #NeonBeatStage #RhythmGame #DanceChallenge #DanceChallenge #YouTubeGaming`;
     const url = window.location.href;
     
     // Abrir YouTube con el texto pre-formateado
@@ -191,11 +191,11 @@ function shareToYouTubeKPop() {
     closeKPopShareModal();
 }
 
-// Sharing específico para Facebook con temática K-pop
+// Sharing específico para Facebook con temática K-pop style
 function shareToFacebookKPop() {
     const combo = gameState.combo || 0;
     const score = gameState.score || 0;
-    const text = `🎤 ¡Acabo de hacer un combo de ${combo} en Neon Beat Stage! ¿Puedes superar mi coreografía K-pop? ¡Únete al challenge!`;
+    const text = `🎤 ¡Acabo de hacer un combo de ${combo} en Neon Beat Stage! ¿Puedes superar mi coreografía K-pop style? ¡Únete al challenge!`;
     const url = window.location.href;
     
     const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
@@ -204,11 +204,11 @@ function shareToFacebookKPop() {
     closeKPopShareModal();
 }
 
-// Sharing específico para X (Twitter) con temática K-pop
+// Sharing específico para X (Twitter) con temática K-pop style
 function shareToTwitterKPop() {
     const combo = gameState.combo || 0;
     const score = gameState.score || 0;
-    const text = `🎤 ¡Combo de ${combo} en Neon Beat Stage! ¿Puedes superar mi coreografía K-pop? #NeonBeatStage #KPopDance #DanceChallenge #LasGuerrerasKPop #XGaming`;
+    const text = `🎤 ¡Combo de ${combo} en Neon Beat Stage! ¿Puedes superar mi coreografía K-pop style? #NeonBeatStage #RhythmGame #DanceChallenge #DanceChallenge #XGaming`;
     const url = window.location.href;
     
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
@@ -237,7 +237,7 @@ function closeKPopInstagramInstructions() {
 // 2. RETENCIÓN & ENGAGEMENT ESPECÍFICO PARA K-POP
 // ========================================
 
-// Sistema de logros específico para rhythm game K-pop
+// Sistema de logros específico para rhythm game K-pop style
 const kpopAchievements = {
     firstBeat: { unlocked: false, name: "Primer Beat", reward: 100, description: "Golpea tu primer beat" },
     fiveCombo: { unlocked: false, name: "Combo de 5", reward: 200, description: "Haz un combo de 5" },
@@ -245,11 +245,11 @@ const kpopAchievements = {
     twentyCombo: { unlocked: false, name: "Combo de 20", reward: 1000, description: "Haz un combo de 20" },
     perfectTiming: { unlocked: false, name: "Timing Perfecto", reward: 800, description: "Haz 10 hits perfectos seguidos" },
     danceMaster: { unlocked: false, name: "Maestro del Baile", reward: 1200, description: "Completa una canción sin fallar" },
-    kpopStar: { unlocked: false, name: "Estrella K-pop", reward: 1500, description: "Alcanza 1000 puntos" },
+    kpopStar: { unlocked: false, name: "Estrella K-pop style", reward: 1500, description: "Alcanza 1000 puntos" },
     rhythmKing: { unlocked: false, name: "Rey del Ritmo", reward: 2000, description: "Alcanza 5000 puntos" }
 };
 
-// Sistema de power-ups específico para rhythm game K-pop
+// Sistema de power-ups específico para rhythm game K-pop style
 const kpopPowerUps = {
     perfectMode: { name: "Modo Perfecto", cost: 300, duration: 15000, description: "Todos los hits son perfectos" },
     comboMultiplier: { name: "Multiplicador de Combo", cost: 250, duration: 20000, description: "Duplica los puntos del combo" },
@@ -258,10 +258,10 @@ const kpopPowerUps = {
     perfectGuide: { name: "Guía Perfecta", cost: 400, duration: 25000, description: "Muestra la posición exacta" }
 };
 
-// Monedas del juego K-pop
+// Monedas del juego K-pop style
 let kpopCoins = parseInt(localStorage.getItem('neonBeatKPopCoins') || '0');
 
-// Mostrar notificación de logro K-pop
+// Mostrar notificación de logro K-pop style
 function showKPopAchievement(achievement) {
     const notification = document.createElement('div');
     notification.className = 'kpop-achievement-notification';
@@ -289,7 +289,7 @@ function showKPopAchievement(achievement) {
     updateKPopCoinsDisplay();
 }
 
-// Verificar logros específicos del rhythm game K-pop
+// Verificar logros específicos del rhythm game K-pop style
 function checkKPopAchievements() {
     const combo = gameState.combo || 0;
     const score = gameState.score || 0;
@@ -335,14 +335,14 @@ function checkKPopAchievements() {
 // 3. MONETIZACIÓN MEJORADA PARA K-POP VIRAL
 // ========================================
 
-// Reward ads más agresivos para usuarios de K-pop
+// Reward ads más agresivos para usuarios de K-pop style
 function showKPopRewardAd(powerUpType, callback) {
     const modal = document.createElement('div');
     modal.className = 'kpop-reward-ad-modal';
     modal.innerHTML = `
         <div class="kpop-reward-ad-content">
             <h3>🎬 Ver Anuncio para ${kpopPowerUps[powerUpType].name}</h3>
-            <p>Mira un anuncio de 30 segundos para obtener este power-up K-pop gratis</p>
+            <p>Mira un anuncio de 30 segundos para obtener este power-up K-pop style gratis</p>
             <div class="kpop-ad-simulation">
                 <div class="kpop-ad-video">
                     <div class="kpop-ad-progress"></div>
@@ -391,11 +391,11 @@ function closeKPopRewardAd() {
     }
 }
 
-// Interstitial ads más frecuentes para usuarios de K-pop
+// Interstitial ads más frecuentes para usuarios de K-pop style
 function showKPopInterstitialAd() {
     const lastAdTime = parseInt(localStorage.getItem('lastKPopInterstitialAd') || '0');
     const currentTime = Date.now();
-    const adInterval = 2 * 60 * 1000; // 2 minutos (muy agresivo para K-pop)
+    const adInterval = 2 * 60 * 1000; // 2 minutos (muy agresivo para K-pop style)
     
     if (currentTime - lastAdTime > adInterval) {
         const modal = document.createElement('div');
@@ -442,7 +442,7 @@ function closeKPopInterstitialAd() {
 // 4. UI MEJORADA PARA K-POP
 // ========================================
 
-// Actualizar display de monedas K-pop
+// Actualizar display de monedas K-pop style
 function updateKPopCoinsDisplay() {
     let coinsDisplay = document.getElementById('kpopCoinsDisplay');
     if (!coinsDisplay) {
@@ -454,7 +454,7 @@ function updateKPopCoinsDisplay() {
     coinsDisplay.innerHTML = `🎤 ${kpopCoins}`;
 }
 
-// Mostrar notificación K-pop
+// Mostrar notificación K-pop style
 function showKPopNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `kpop-notification ${type}`;
@@ -474,7 +474,7 @@ function showKPopNotification(message, type = 'info') {
 
 const kpopStyles = `
 <style>
-/* Modales de sharing para K-pop */
+/* Modales de sharing para K-pop style */
 .kpop-share-modal, .kpop-instagram-instructions-modal, .kpop-reward-ad-modal, .kpop-interstitial-ad-modal {
     position: fixed;
     top: 0;
@@ -617,7 +617,7 @@ const kpopStyles = `
     font-size: 1.2rem;
 }
 
-/* Display de monedas K-pop */
+/* Display de monedas K-pop style */
 .kpop-coins-display {
     position: fixed;
     top: 20px;
@@ -637,7 +637,7 @@ const kpopStyles = `
     50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
 }
 
-/* Notificaciones de logros K-pop */
+/* Notificaciones de logros K-pop style */
 .kpop-achievement-notification {
     position: fixed;
     top: 20px;
@@ -698,7 +698,7 @@ const kpopStyles = `
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
-/* Anuncios simulados K-pop */
+/* Anuncios simulados K-pop style */
 .kpop-ad-simulation {
     background: #000;
     border-radius: 20px;
@@ -778,7 +778,7 @@ const kpopStyles = `
     color: #FF0080;
 }
 
-/* Notificaciones generales K-pop */
+/* Notificaciones generales K-pop style */
 .kpop-notification {
     position: fixed;
     top: 20px;
@@ -805,5 +805,5 @@ const kpopStyles = `
 </style>
 `;
 
-// Inyectar estilos específicos para K-pop
+// Inyectar estilos específicos para K-pop style
 document.head.insertAdjacentHTML('beforeend', kpopStyles);
