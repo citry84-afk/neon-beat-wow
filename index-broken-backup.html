@@ -164,7 +164,7 @@
             background: linear-gradient(90deg, #FF0080, #00FFFF, #39FF14, #8A2BE2);
             box-shadow: 0 0 20px rgba(255, 0, 128, 0.8);
             animation: hitLinePulse 1s ease-in-out infinite;
-            z-index: 30;
+            z-index: 1000;
         }
         
         @keyframes hitLinePulse {
@@ -469,11 +469,11 @@
             top: 0;
             bottom: 0;
             width: 25%;
-            background: rgba(0, 255, 255, 0.05);
+            background: transparent;
             z-index: 50;
             touch-action: manipulation;
             /* LARGER HIT AREAS FOR MOBILE */
-            border: 1px solid rgba(0, 255, 255, 0.2);
+            border: 2px solid transparent;
             transition: all 0.1s ease;
         }
         
@@ -606,6 +606,7 @@
             border-top: 1px solid #333;
         }
     </style>
+    <!-- FIXES QUE FUNCIONAN NEON BEAT v2.3 -->
 </head>
 <body>
     <!-- STAGE LIGHTING -->
@@ -621,7 +622,7 @@
         <div class="title">NEON BEAT STAGE</div>
         <div class="subtitle">K-POP RHYTHM GAME</div>
         
-        <button class="btn" onclick="startGame()">🎵 START RHYTHM</button>
+        <button class="btn" onclick="console.log('🎵 START RHYTHM BUTTON CLICKED'); startGame()">🎵 START RHYTHM</button>
         <button class="btn" onclick="showTutorial()">📚 TUTORIAL</button>
         <button class="btn" onclick="testAudio()">🔊 TEST AUDIO</button>
         
@@ -662,11 +663,6 @@
             <div class="lane" data-lane="2"></div>
             <div class="lane" data-lane="3"></div>
             
-                <div id="setup-status">❌ Setup not called</div>
-                <div id="zones-found">❓ Zones: ?</div>
-                <div id="last-touch">👆 Touch: None</div>
-                <div id="handleinput-status">❓ handleInput: ?</div>
-            </div>            
             <!-- HIT LINE -->
             <div class="hit-line"></div>
             
@@ -675,19 +671,14 @@
             <div class="touch-zone" data-lane="1"></div>
             <div class="touch-zone" data-lane="2"></div>
             <div class="touch-zone" data-lane="3"></div>
-            
-                <div id="setup-status">❌ Setup not called</div>
-                <div id="zones-found">❓ Zones: ?</div>
-                <div id="last-touch">👆 Touch: None</div>
-                <div id="handleinput-status">❓ handleInput: ?</div>
-            </div>        </div>
+        </div>
         
         <!-- INSTRUCTIONS -->
         <div class="instructions">
             🎵 <strong>TAP LANES WHEN NOTES HIT THE LINE</strong> • 🎯 Perfect = 100pts • 🎶 Perfect hits unlock MELODY • 🎤 Combos add VOCAL!
         </div>
         
-        <button class="btn" onclick="showMenu()" style="position: fixed; top: 20px; right: 20px; max-width: 60px; z-index: 1001; padding: 8px 16px; font-size: 0.8rem;">🏠 MENU</button>
+        <button class="btn" onclick="showMenu()" style="position: fixed; top: 20px; right: 20px; z-index: 1001; padding: 8px 16px; font-size: 0.8rem;">🏠 MENU</button>
         
         <!-- BOTTOM BANNER AD -->
         <div class="ad-banner ad-bottom">
@@ -941,7 +932,12 @@
                 startTime: Date.now()
             };
             
-            showScreen('game');
+            console.log('🎵 Hiding menu screen...');
+            document.getElementById('menu-screen').classList.add('hidden');
+            console.log('🎵 Showing game screen...');
+            document.getElementById('game-screen').classList.remove('hidden');
+            currentScreen = 'game';
+            console.log('🎵 Current screen set to:' + currentScreen);
             
             // Initialize audio
             if (!audioContext) {
@@ -971,6 +967,7 @@
         }
         
         function startGameLoop() {
+            console.log('🎵 START GAME LOOP CALLED');
             function gameLoopFrame() {
                 if (!gameState.gameActive) return;
                 
@@ -982,6 +979,7 @@
         }
         
         function updateGame() {
+            console.log('🎵 UPDATE GAME CALLED - gameActive:' + gameState.gameActive);
             if (!gameState.gameActive) return;
             
             const currentTime = Date.now();
@@ -1009,6 +1007,7 @@
         
         // ========== RHYTHM GAME CORE FUNCTIONS ==========
         function spawnNote() {
+            console.log('🎵 SPAWN NOTE CALLED');
             const lanes = 4;
             const lane = Math.floor(Math.random() * lanes);
             const gameArea = document.getElementById('game-area');
@@ -1043,59 +1042,34 @@
         }
         
         function moveNotes() {
-            const gameAreaHeight = document.getElementById('game-area').offsetHeight;
+            console.log('🎵 MOVE NOTES CALLED - notes count:' + gameState.notes.length);
+            const gameArea = document.getElementById('game-area');
+            const gameAreaHeight = gameArea.offsetHeight;
+            const speed = gameState.noteSpeed / 60; // pixels per frame (60fps)
             
-            gameState.notes.forEach((note, index) => {
-                if (!note.active) return;
+            gameState.notes = gameState.notes.filter(note => {
+                note.y += speed;
                 
-                note.y += note.speed * (1/60); // 60fps
-                note.element.style.top = note.y + 'px';
+                if (note.element && note.element.parentNode) {
+                    note.element.style.top = note.y + 'px';
+                }
                 
-                // Remove notes that are off screen
-                if (note.y > gameAreaHeight + 50) {
-                    note.element.remove();
-                    gameState.notes.splice(index, 1);
-                    
-                    // Count as miss if not hit
-                    if (note.active) {
-                        gameState.missHits++;
-                        gameState.combo = 0;
-                        
-                        // Lose life on miss
-                        gameState.lives--;
-                        updateUI();
-                        
-                        if (gameState.lives <= 0) {
-                            gameOver();
-                        }
+                // Remove notes that have passed the bottom
+                if (note.y > gameAreaHeight) {
+                    if (note.element && note.element.parentNode) {
+                        note.element.remove();
                     }
+                    return false;
                 }
+                
+                return true;
             });
-        }
+        }        }
         
-        function checkMissedNotes() {
-            const hitLineY = document.getElementById('game-area').offsetHeight - 100;
-            
-            gameState.notes.forEach((note, index) => {
-                if (note.active && note.y > hitLineY + 50) {
-                    // Note missed
-                    note.active = false;
-                    gameState.missHits++;
-                    gameState.combo = 0;
-                    
-                    // Visual feedback
-                    note.element.style.background = '#FF0000';
-                    setTimeout(() => {
-                        if (note.element && note.element.parentNode) {
-                            note.element.remove();
-                        }
-                    }, 200);
-                }
-            });
-        }
+        
         
         function handleInput(lane) {
-            const hitLineY = document.getElementById('game-area').offsetHeight - 100;
+            const hitLineY = document.querySelector('.hit-line').offsetTop;
             let closestNote = null;
             let closestDistance = Infinity;
             
@@ -1216,46 +1190,7 @@
             });
         }
         
-        function moveNotes() {
-            const gameArea = document.getElementById('game-area');
-            const gameAreaHeight = gameArea.offsetHeight;
-            const speed = gameState.noteSpeed / 60; // pixels per frame (60fps)
-            
-            gameState.notes = gameState.notes.filter(note => {
-                note.y += speed;
-                
-                if (note.element && note.element.parentNode) {
-                    note.element.style.top = note.y + 'px';
-                }
-                
-                // Remove notes that have passed the bottom
-                if (note.y > gameAreaHeight) {
-                    if (note.element && note.element.parentNode) {
-                        note.element.remove();
-                    }
-                    return false;
-                }
-                
-                return true;
-            });
-        }
         
-        function checkMissedNotes() {
-            const hitLineY = document.querySelector('.hit-line').offsetTop;
-            const missThreshold = 100; // pixels past hit line = miss
-            
-            gameState.notes = gameState.notes.filter(note => {
-                if (note.y > hitLineY + missThreshold) {
-                    // Note missed
-                    handleMiss(note.lane);
-                    if (note.element && note.element.parentNode) {
-                        note.element.remove();
-                    }
-                    return false;
-                }
-                return true;
-            });
-        }
         
         function handleHit(lane) {
             const hitLineY = document.querySelector('.hit-line').offsetTop;
@@ -1563,7 +1498,7 @@
         }
         
         // ========== VIRAL SHARING FUNCTIONS ==========
-        function shareNeonBeatNative() {
+        function shareNeonBeatNativeOriginal() {
             const accuracy = gameState.totalNotes > 0 ? ((gameState.perfectHits + gameState.goodHits) / gameState.totalNotes * 100).toFixed(1) : 0;
             const shareData = {
                 title: '🎵 Neon Beat Stage - Epic Score!',
@@ -1797,41 +1732,9 @@ https://neon-beat-stage.netlify.app
             document.getElementById('best-score').textContent = gameState.bestScore;
         });
     </script>
-<script>
-// ========== MINIMAL HANDLEINPUT FOR TESTING ==========
-window.handleInput = function(lane) {
-    console.log("🎮 handleInput called with lane:", lane);
-    
-    // Update debug display
-    const lastTouch = document.getElementById("last-touch");
-    if (lastTouch) {
-        lastTouch.textContent = "🎮 HANDLED: Lane " + lane + " (" + new Date().toLocaleTimeString() + ")";
-        lastTouch.style.color = "#FFFF00";
-    }
-    
-    // Simple visual feedback
-    const gameArea = document.getElementById("game-area");
-    if (gameArea) {
-        const flash = document.createElement("div");
-        flash.style.position = "absolute";
-        flash.style.left = (lane * 25) + "%";
-        flash.style.top = "80%";
-        flash.style.width = "25%";
-        flash.style.height = "20%";
-        flash.style.background = "rgba(255, 255, 0, 0.8)";
-        flash.style.pointerEvents = "none";
-        flash.style.zIndex = "999";
-        gameArea.appendChild(flash);
-        
-        setTimeout(() => {
-            if (flash.parentNode) flash.parentNode.removeChild(flash);
-        }, 300);
-    }
-};
-console.log("✅ handleInput function created!");
-</script><script src="clean-touch.js"></script></body>
-<script src="beautiful-effects.js"></script></html>
-<script src="fixed-music.js"></script>                });
+</body>
+</html>
+                });
             } else {
                 copyViralMessage();
             }
@@ -1946,11 +1849,11 @@ ${window.location.href}
         
         // ========== CONTROLS ==========
         function setupControls() {
-            console.log("🔧 setupControls() called!");            // ========== MOBILE TOUCH OPTIMIZED ==========
+            // ========== MOBILE TOUCH OPTIMIZED ==========
             const touchZones = document.querySelectorAll('.touch-zone');
-            console.log("📱 Touch zones found:", touchZones.length);            touchZones.forEach((zone, index) => {
+            touchZones.forEach((zone, index) => {
                 // TOUCHSTART - Primary mobile input
-                    console.log("➕ Adding touchstart listener to zone", index, "lane", zone.dataset.lane);                zone.addEventListener('touchstart', (e) => {
+                zone.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (gameState.gameActive) {
@@ -1958,9 +1861,7 @@ ${window.location.href}
                         zone.classList.add('active');
                         
                         console.log(`🎵 TOUCH detected on lane ${lane}`);
-                        console.log("Touch zone element:", zone);
-                        console.log("Game active:", gameState.gameActive);
-                        console.log("HandleInput function exists:", typeof handleInput);                        handleInput(lane);
+                        handleInput(lane);
                         
                         // Haptic feedback
                         if (navigator.vibrate) {
@@ -2072,33 +1973,8 @@ ${window.location.href}
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Neon Beat Stage initializing...');
             
-            const gameArea = document.getElementById("game-area");
-            console.log("🎮 Game area exists:", !!gameArea);
-            if (gameArea) {
-                console.log("📏 Game area children:", gameArea.children.length);
-            }            setupControls();
-        });
-        
-        // ========== FORCE SETUP CONTROLS ==========
-        console.log("🚨 FORCING setupControls execution!");
-        
-        // Execute setupControls immediately
-        setTimeout(() => {
-            console.log("⏰ Timeout setupControls execution!");
             setupControls();
-        }, 1000);
-        
-        // Also execute on window load
-        window.addEventListener("load", () => {
-            console.log("🪟 Window load setupControls execution!");
-            setupControls();
-        });
-        
-        // And execute after any click
-        document.addEventListener("click", () => {
-            console.log("👆 Click setupControls execution!");
-            setupControls();
-        }, { once: true });            
+            
             // Load best score
             const bestScore = localStorage.getItem('neonBeatBestScore') || 0;
             document.getElementById('best-score').textContent = bestScore;
@@ -2133,3 +2009,10 @@ ${window.location.href}
             }
         };
         
+        // Show cross-promotion after game over sometimes
+        window.addEventListener('beforeunload', () => {
+            LIPAPortfolio.showRotatingPromo();
+        });
+    </script>
+</body>
+</html>
