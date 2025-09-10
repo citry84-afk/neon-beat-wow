@@ -606,8 +606,6 @@
             border-top: 1px solid #333;
         }
     </style>
-    <!-- OPTIMIZACIONES K-POP VIRAL + RETENCIÓN + MONETIZACIÓN -->
-    <script src="neon-beat-kpop-optimizations.js"></script>
 </head>
 <body>
     <!-- STAGE LIGHTING -->
@@ -1133,7 +1131,7 @@
                 
                 if (hitType !== 'miss') {
                     gameState.combo++;
-                    checkKPopAchievements();                    gameState.score += points + (gameState.combo * 10);
+                    gameState.score += points + (gameState.combo * 10);
                     
                     // Music layer activation feedback
                     if (gameState.perfectHits === 4) {
@@ -1524,8 +1522,7 @@
                     <div style="margin: 20px 0 10px 0; color: #FF6B6B; font-weight: bold;">OR SHARE YOUR EPIC SCORE!</div>
                     
                     <button onclick="shareNeonBeatNative()" style="background: #00FFFF; color: #000; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">📱 SHARE</button>
-                    <button onclick="showKPopPowerUpMenu()" style="background: #FF0080; color: white; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">⚡ POWER-UPS</button>
-                    <button onclick="showKPopAchievements()" style="background: #FFD700; color: #000; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">🏆 LOGROS</button>                    <button onclick="copyNeonBeatViralMessage()" style="background: #FF0080; color: #fff; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">📋 COPY</button>
+                    <button onclick="copyNeonBeatViralMessage()" style="background: #FF0080; color: #fff; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">📋 COPY</button>
                     <button onclick="generateNeonBeatImage()" style="background: #39FF14; color: #000; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">📸 IMAGE</button>
                     
                     <div style="margin-top: 20px;">
@@ -1556,12 +1553,7 @@
         }
         
         // ========== VIRAL SHARING FUNCTIONS ==========
-        // Capturar momento K-pop épico antes de compartir
-        captureKPopMoment();
-        return;
-    }
-
-    function shareNeonBeatNativeOriginal() {        function shareNeonBeatNative() {
+        function shareNeonBeatNative() {
             const accuracy = gameState.totalNotes > 0 ? ((gameState.perfectHits + gameState.goodHits) / gameState.totalNotes * 100).toFixed(1) : 0;
             const shareData = {
                 title: '🎵 Neon Beat Stage - Epic Score!',
@@ -2076,153 +2068,6 @@ ${window.location.href}
         window.addEventListener('beforeunload', () => {
             LIPAPortfolio.showRotatingPromo();
         });
-
-    // ========================================
-    // FUNCIONES DE POWER-UPS Y LOGROS K-POP
-    // ========================================
-
-    function showKPopPowerUpMenu() {
-        const modal = document.createElement("div");
-        modal.className = "kpop-powerup-modal";
-        modal.innerHTML = `
-            <div class="kpop-powerup-content">
-                <h3>⚡ Power-ups K-POP Disponibles</h3>
-                <div class="kpop-powerup-grid">
-                    <div class="kpop-powerup-item">
-                        <h4>🎯 Modo Perfecto</h4>
-                        <p>Todos los hits son perfectos</p>
-                        <div class="kpop-powerup-actions">
-                            <span class="cost">💰 300</span>
-                            <button onclick="buyKPopPowerUp("perfectMode")" class="btn">Comprar</button>
-                            <button onclick="showKPopRewardAd("perfectMode", () => activateKPopPowerUp("perfectMode"))" class="btn reward">🎬 Gratis</button>
-                        </div>
-                    </div>
-                    <div class="kpop-powerup-item">
-                        <h4>💎 Multiplicador de Combo</h4>
-                        <p>Duplica los puntos del combo</p>
-                        <div class="kpop-powerup-actions">
-                            <span class="cost">💰 250</span>
-                            <button onclick="buyKPopPowerUp("comboMultiplier")" class="btn">Comprar</button>
-                            <button onclick="showKPopRewardAd("comboMultiplier", () => activateKPopPowerUp("comboMultiplier"))" class="btn reward">🎬 Gratis</button>
-                        </div>
-                    </div>
-                    <div class="kpop-powerup-item">
-                        <h4>🐌 Cámara Lenta</h4>
-                        <p>Ralentiza el ritmo</p>
-                        <div class="kpop-powerup-actions">
-                            <span class="cost">💰 200</span>
-                            <button onclick="buyKPopPowerUp("slowMotion")" class="btn">Comprar</button>
-                            <button onclick="showKPopRewardAd("slowMotion", () => activateKPopPowerUp("slowMotion"))" class="btn reward">🎬 Gratis</button>
-                        </div>
-                    </div>
-                    <div class="kpop-powerup-item">
-                        <h4>❤️ Vida Extra</h4>
-                        <p>Te da una segunda oportunidad</p>
-                        <div class="kpop-powerup-actions">
-                            <span class="cost">💰 500</span>
-                            <button onclick="buyKPopPowerUp("extraLife")" class="btn">Comprar</button>
-                            <button onclick="showKPopRewardAd("extraLife", () => activateKPopPowerUp("extraLife"))" class="btn reward">🎬 Gratis</button>
-                        </div>
-                    </div>
-                    <div class="kpop-powerup-item">
-                        <h4>🎯 Guía Perfecta</h4>
-                        <p>Muestra la posición exacta</p>
-                        <div class="kpop-powerup-actions">
-                            <span class="cost">💰 400</span>
-                            <button onclick="buyKPopPowerUp("perfectGuide")" class="btn">Comprar</button>
-                            <button onclick="showKPopRewardAd("perfectGuide", () => activateKPopPowerUp("perfectGuide"))" class="btn reward">🎬 Gratis</button>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="closeKPopPowerUpMenu()" class="close-btn">✕</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        setTimeout(() => modal.classList.add("show"), 100);
-    }
-
-    function showKPopAchievements() {
-        const modal = document.createElement("div");
-        modal.className = "kpop-achievements-modal";
-        modal.innerHTML = `
-            <div class="kpop-achievements-content">
-                <h3>🏆 Logros K-POP</h3>
-                <div class="kpop-achievements-list">
-                    ${Object.entries(kpopAchievements).map(([key, achievement]) => `
-                        <div class="kpop-achievement-item ${achievement.unlocked ? "unlocked" : "locked"}">
-                            <div class="kpop-achievement-icon">${achievement.unlocked ? "🎤" : "🔒"}</div>
-                            <div class="kpop-achievement-info">
-                                <h4>${achievement.name}</h4>
-                                <p>${achievement.description}</p>
-                                <span class="kpop-reward">Recompensa: ${achievement.reward} monedas</span>
-                            </div>
-                        </div>
-                    `).join("")}
-                </div>
-                <button onclick="closeKPopAchievements()" class="close-btn">✕</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        setTimeout(() => modal.classList.add("show"), 100);
-    }
-
-    function buyKPopPowerUp(powerUpType) {
-        const powerUp = kpopPowerUps[powerUpType];
-        if (kpopCoins >= powerUp.cost) {
-            kpopCoins -= powerUp.cost;
-            localStorage.setItem("neonBeatKPopCoins", kpopCoins.toString());
-            updateKPopCoinsDisplay();
-            activateKPopPowerUp(powerUpType);
-            showKPopNotification(`¡${powerUp.name} comprado!`, "success");
-        } else {
-            showKPopNotification("No tienes suficientes monedas", "error");
-        }
-    }
-
-    function activateKPopPowerUp(powerUpType) {
-        const powerUp = kpopPowerUps[powerUpType];
-        showKPopNotification(`${powerUp.name} activado!`, "success");
-        
-        // Implementar efectos del power-up K-pop
-        switch(powerUpType) {
-            case "perfectMode":
-                // Activar modo perfecto
-                break;
-            case "comboMultiplier":
-                // Activar multiplicador de combo
-                break;
-            case "slowMotion":
-                // Ralentizar el ritmo
-                break;
-            case "extraLife":
-                // Dar vida extra
-                break;
-            case "perfectGuide":
-                // Mostrar guía perfecta
-                break;
-        }
-    }
-
-    function closeKPopPowerUpMenu() {
-        const modal = document.querySelector(".kpop-powerup-modal");
-        if (modal) {
-            modal.classList.remove("show");
-            setTimeout(() => modal.remove(), 300);
-        }
-    }
-
-    function closeKPopAchievements() {
-        const modal = document.querySelector(".kpop-achievements-modal");
-        if (modal) {
-            modal.classList.remove("show");
-            setTimeout(() => modal.remove(), 300);
-        }
-    }
-
-    // Inicializar monedas K-pop al cargar
-    document.addEventListener("DOMContentLoaded", function() {
-        updateKPopCoinsDisplay();
-    });
     </script>
 </body>
 </html>
