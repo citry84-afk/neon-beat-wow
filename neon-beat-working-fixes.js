@@ -1,4 +1,4 @@
-// NEON BEAT STAGE - FIXES QUE FUNCIONAN v2.2
+// NEON BEAT STAGE - FIXES QUE FUNCIONAN v2.3
 // Solo las optimizaciones que no rompen el juego
 
 // ========================================
