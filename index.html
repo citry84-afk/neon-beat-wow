@@ -622,7 +622,7 @@
         <div class="title">NEON BEAT STAGE</div>
         <div class="subtitle">K-POP RHYTHM GAME</div>
         
-        <button class="btn" onclick="startGame()">🎵 START RHYTHM</button>
+        <button class="btn" onclick="console.log('🎵 START RHYTHM BUTTON CLICKED'); startGame()">🎵 START RHYTHM</button>
         <button class="btn" onclick="showTutorial()">📚 TUTORIAL</button>
         <button class="btn" onclick="testAudio()">🔊 TEST AUDIO</button>
         
@@ -932,7 +932,12 @@
                 startTime: Date.now()
             };
             
-            showScreen('game');
+            console.log('🎵 Hiding menu screen...');
+            document.getElementById('menu-screen').classList.add('hidden');
+            console.log('🎵 Showing game screen...');
+            document.getElementById('game-screen').classList.remove('hidden');
+            currentScreen = 'game';
+            console.log('🎵 Current screen set to:' + currentScreen);
             
             // Initialize audio
             if (!audioContext) {
@@ -962,6 +967,7 @@
         }
         
         function startGameLoop() {
+            console.log('🎵 START GAME LOOP CALLED');
             function gameLoopFrame() {
                 if (!gameState.gameActive) return;
                 
@@ -973,6 +979,7 @@
         }
         
         function updateGame() {
+            console.log('🎵 UPDATE GAME CALLED - gameActive:' + gameState.gameActive);
             if (!gameState.gameActive) return;
             
             const currentTime = Date.now();
@@ -1000,6 +1007,7 @@
         
         // ========== RHYTHM GAME CORE FUNCTIONS ==========
         function spawnNote() {
+            console.log('🎵 SPAWN NOTE CALLED');
             const lanes = 4;
             const lane = Math.floor(Math.random() * lanes);
             const gameArea = document.getElementById('game-area');
@@ -1034,6 +1042,7 @@
         }
         
         function moveNotes() {
+            console.log('🎵 MOVE NOTES CALLED - notes count:' + gameState.notes.length);
             const gameArea = document.getElementById('game-area');
             const gameAreaHeight = gameArea.offsetHeight;
             const speed = gameState.noteSpeed / 60; // pixels per frame (60fps)
