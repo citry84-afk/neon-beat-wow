@@ -1034,35 +1034,29 @@
         }
         
         function moveNotes() {
-            const gameAreaHeight = document.getElementById('game-area').offsetHeight;
+            const gameArea = document.getElementById('game-area');
+            const gameAreaHeight = gameArea.offsetHeight;
+            const speed = gameState.noteSpeed / 60; // pixels per frame (60fps)
             
-            gameState.notes.forEach((note, index) => {
-                if (!note.active) return;
+            gameState.notes = gameState.notes.filter(note => {
+                note.y += speed;
                 
-                note.y += note.speed * (1/60); // 60fps
-                note.element.style.top = note.y + 'px';
-                
-                // Remove notes that are off screen
-                if (note.y > gameAreaHeight + 50) {
-                    note.element.remove();
-                    gameState.notes.splice(index, 1);
-                    
-                    // Count as miss if not hit
-                    if (note.active) {
-                        gameState.missHits++;
-                        gameState.combo = 0;
-                        
-                        // Lose life on miss
-                        gameState.lives--;
-                        updateUI();
-                        
-                        if (gameState.lives <= 0) {
-                            gameOver();
-                        }
-                    }
+                if (note.element && note.element.parentNode) {
+                    note.element.style.top = note.y + 'px';
                 }
+                
+                // Remove notes that have passed the bottom
+                if (note.y > gameAreaHeight) {
+                    if (note.element && note.element.parentNode) {
+                        note.element.remove();
+                    }
+                    return false;
+                }
+                
+                return true;
             });
-        }
+        }        }
+        
         
         
         function handleInput(lane) {
@@ -1187,29 +1181,6 @@
             });
         }
         
-        function moveNotes() {
-            const gameArea = document.getElementById('game-area');
-            const gameAreaHeight = gameArea.offsetHeight;
-            const speed = gameState.noteSpeed / 60; // pixels per frame (60fps)
-            
-            gameState.notes = gameState.notes.filter(note => {
-                note.y += speed;
-                
-                if (note.element && note.element.parentNode) {
-                    note.element.style.top = note.y + 'px';
-                }
-                
-                // Remove notes that have passed the bottom
-                if (note.y > gameAreaHeight) {
-                    if (note.element && note.element.parentNode) {
-                        note.element.remove();
-                    }
-                    return false;
-                }
-                
-                return true;
-            });
-        }
         
         
         function handleHit(lane) {
