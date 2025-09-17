@@ -89,6 +89,15 @@
     </style>
 </head>
 <body>
+    <!-- Ads: ocultos durante el juego; visibles en game over -->
+    <div id="top-banner" style="position:fixed;top:0;left:0;width:100%;height:50px;background:rgba(0,0,0,0.9);z-index:9998;display:none;align-items:center;justify-content:center;border-bottom:2px solid #00FFFF;">
+        <ins class="adsbygoogle" style="display:block;width:320px;height:50px;"
+             data-ad-client="ca-pub-4129506161314540" data-ad-slot="6673201053"></ins>
+    </div>
+    <div id="bottom-banner" style="position:fixed;bottom:0;left:0;width:100%;height:50px;background:rgba(0,0,0,0.9);z-index:9998;display:none;align-items:center;justify-content:center;border-top:2px solid #00FFFF;">
+        <ins class="adsbygoogle" style="display:block;width:320px;height:50px;"
+             data-ad-client="ca-pub-4129506161314540" data-ad-slot="6673201053"></ins>
+    </div>
     <div class="game-header">
         <div class="score" id="score">SCORE: 0</div>
         <div class="lives" id="lives">❤️ 3</div>
@@ -152,6 +161,7 @@
             setupControls();
             initAudio();
             startKPopBeat();
+            hideAds();
             console.log('✅ Game started successfully');
         }
         
@@ -330,6 +340,7 @@
         function gameOver() {
             gameState.gameActive = false;
             console.log("💀 GAME OVER");
+            showAds();
             showViralGameOverScreen();
         }
 
@@ -425,8 +436,27 @@
         }        
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 DOM loaded - Starting game...');
+            // Inicializar anuncios (no bloquea si no carga)
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            } catch(e) {}
+            hideAds();
             startGame();
         });
+
+        function showAds() {
+            const top = document.getElementById('top-banner');
+            const bottom = document.getElementById('bottom-banner');
+            if (top) top.style.display = 'flex';
+            if (bottom) bottom.style.display = 'flex';
+        }
+        function hideAds() {
+            const top = document.getElementById('top-banner');
+            const bottom = document.getElementById('bottom-banner');
+            if (top) top.style.display = 'none';
+            if (bottom) bottom.style.display = 'none';
+        }
     </script>
 </body>
 </html>
