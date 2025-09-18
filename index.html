@@ -154,6 +154,10 @@
         }        
         function startGame() {
             console.log('🎮 STARTING NEON BEAT STAGE');
+            
+            // Track game start
+            gtag('event', 'game_start', { game_name: 'neon_beat_stage' });
+            
             gameState.gameActive = true;
             gameState.frameCount = 0;
             updateUI();
@@ -340,6 +344,15 @@
         function gameOver() {
             gameState.gameActive = false;
             console.log("💀 GAME OVER");
+            
+            // Track game over
+            gtag('event', 'game_over', { 
+                game_name: 'neon_beat_stage', 
+                score: gameState.score,
+                combo: gameState.combo,
+                perfect_hits: gameState.perfectHits
+            });
+            
             showAds();
             showViralGameOverScreen();
         }
@@ -347,7 +360,16 @@
         function showViralGameOverScreen() {
             const modal = document.createElement("div");
             modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000;";
-            modal.innerHTML = `<div style="background: linear-gradient(145deg, #1a1a2e, #16213e); padding: 30px; border-radius: 20px; text-align: center; border: 3px solid #00FFFF; box-shadow: 0 0 30px #FF0080; max-width: 90%;"><h2 style="color: #FF0080; margin: 20px 0;">🎮 GAME OVER! 🎮</h2><div style="margin: 20px 0; color: white;"><p>🎯 Score: ${gameState.score}</p><p>🔥 Max Combo: ${gameState.combo}</p><p>✨ Notes Hit: ${Math.floor(gameState.score / 100)}</p></div><button onclick="shareNeonBeat()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF0080, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📱 SHARE SCORE</button><button onclick="copyNeonBeatMessage()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FFFF00, #FF0080); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📋 COPY MESSAGE</button><button onclick="watchAdToContinue(event)" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF6600, #FFFF00); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🎬 WATCH AD TO CONTINUE</button><button onclick="location.reload()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #8A2BE2, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🔄 NEW GAME</button></div>`;
+            modal.innerHTML = `<div style="background: linear-gradient(145deg, #1a1a2e, #16213e); padding: 30px; border-radius: 20px; text-align: center; border: 3px solid #00FFFF; box-shadow: 0 0 30px #FF0080; max-width: 90%;"><h2 style="color: #FF0080; margin: 20px 0;">🎮 GAME OVER! 🎮</h2><div style="margin: 20px 0; color: white;"><p>🎯 Score: ${gameState.score}</p><p>🔥 Max Combo: ${gameState.combo}</p><p>✨ Notes Hit: ${Math.floor(gameState.score / 100)}</p></div><button onclick="shareNeonBeat()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF0080, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📱 SHARE SCORE</button><button onclick="copyNeonBeatMessage()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FFFF00, #FF0080); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📋 COPY MESSAGE</button><button onclick="watchAdToContinue(event)" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF6600, #FFFF00); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🎬 WATCH AD TO CONTINUE</button><button onclick="restartGame()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #8A2BE2, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🔄 NEW GAME</button>
+            
+            <!-- Interstitial Ad Container -->
+            <div id="gameOverAd" style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid #00FFFF; border-radius: 8px;">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-4129506161314540"
+                     data-ad-slot="6673201053"
+                     data-ad-format="auto"></ins>
+            </div></div>`;
             document.body.appendChild(modal);
         }
 
@@ -434,8 +456,27 @@
             document.body.appendChild(notification);
             setTimeout(() => { notification.remove(); }, 3000);
         }        
+        // Add missing functions
+        function restartGame() {
+            gtag('event', 'game_restart', { game_name: 'neon_beat_stage' });
+            location.reload();
+        }
+        
+        function showInterstitialAd() {
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+                gtag('event', 'ad_impression', { game_name: 'neon_beat_stage' });
+            } catch (e) {
+                console.log('AdSense not loaded yet');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 DOM loaded - Starting game...');
+            
+            // Track page view
+            gtag('event', 'page_view', { game_name: 'neon_beat_stage' });
+            
             // Inicializar anuncios (no bloquea si no carga)
             try {
                 (adsbygoogle = window.adsbygoogle || []).push({});
