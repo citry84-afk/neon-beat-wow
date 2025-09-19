@@ -98,10 +98,26 @@
         <ins class="adsbygoogle" style="display:block;width:320px;height:50px;"
              data-ad-client="ca-pub-4129506161314540" data-ad-slot="6673201053"></ins>
     </div>
+    
+    <!-- Banner lateral para móviles (más agresivo) -->
+    <div id="side-banner" style="position:fixed; right:10px; top:50%; transform:translateY(-50%); width:120px; height:600px; background:rgba(0,0,0,0.8); border:1px solid #00FFFF; border-radius:8px; display:none; z-index:1000;">
+        <ins class="adsbygoogle" 
+             style="display:block;width:120px;height:600px;" 
+             data-ad-client="ca-pub-4129506161314540" 
+             data-ad-slot="6673201053"></ins>
+    </div>
     <div class="game-header">
         <div class="score" id="score">SCORE: 0</div>
         <div class="lives" id="lives">❤️ 3</div>
         <div class="combo" id="combo">COMBO: 0</div>
+    </div>
+    
+    <!-- Banner en header del juego -->
+    <div id="menu-banner" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid #00FFFF; border-radius: 8px; text-align: center;">
+        <ins class="adsbygoogle" 
+             style="display:block;width:320px;height:50px;" 
+             data-ad-client="ca-pub-4129506161314540" 
+             data-ad-slot="6673201053"></ins>
     </div>
     <div class="game-area" id="gameArea">
         <div class="lane" data-lane="0"><div class="touch-zone" data-lane="0"></div></div>
@@ -160,6 +176,11 @@
             
             gameState.gameActive = true;
             gameState.frameCount = 0;
+            
+            // Reset banner strategy
+            bannerShown = false;
+            gameStartTime = Date.now();
+            
             updateUI();
             gameLoop();
             setupControls();
@@ -177,6 +198,10 @@
                 gameState.frameCount = 0;
             }
             moveNotes();
+            
+            // Verificar si mostrar banners después de 30s
+            checkBannerDisplay();
+            
             requestAnimationFrame(gameLoop);
         }
         
@@ -492,11 +517,56 @@
             if (top) top.style.display = 'flex';
             if (bottom) bottom.style.display = 'flex';
         }
+        // Ads helpers - ESTRATEGIA AGRESIVA PERO INTELIGENTE
+        function showAds() {
+            const top = document.getElementById('top-banner');
+            const bottom = document.getElementById('bottom-banner');
+            const side = document.getElementById('side-banner');
+            const menu = document.getElementById('menu-banner');
+            if (top) top.style.display = 'flex';
+            if (bottom) bottom.style.display = 'flex';
+            if (side) side.style.display = 'block';
+            if (menu) menu.style.display = 'block';
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+                (adsbygoogle = window.adsbygoogle || []).push({});
+                (adsbygoogle = window.adsbygoogle || []).push({});
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            } catch(e) {}
+        }
+        
         function hideAds() {
             const top = document.getElementById('top-banner');
             const bottom = document.getElementById('bottom-banner');
+            const side = document.getElementById('side-banner');
+            const menu = document.getElementById('menu-banner');
             if (top) top.style.display = 'none';
             if (bottom) bottom.style.display = 'none';
+            if (side) side.style.display = 'none';
+            if (menu) menu.style.display = 'none';
+        }
+        
+        // NUEVA ESTRATEGIA: Mostrar banners después de 30 segundos de juego
+        let gameStartTime = 0;
+        let bannerShown = false;
+        
+        function checkBannerDisplay() {
+            if (!gameState.gameActive || bannerShown) return;
+            
+            const gameTime = Date.now() - gameStartTime;
+            if (gameTime > 30000) { // 30 segundos
+                showAds();
+                bannerShown = true;
+                console.log('💰 Banners mostrados después de 30s de juego');
+            }
+        }
+        
+        // Mostrar banners en pausa (oportunidad de monetización)
+        function showPauseAds() {
+            if (gameState.paused) {
+                showAds();
+                console.log('💰 Banners mostrados durante pausa');
+            }
         }
     </script>
 </body>
