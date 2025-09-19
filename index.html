@@ -489,7 +489,6 @@
         
         function showInterstitialAd() {
             try {
-                (adsbygoogle = window.adsbygoogle || []).push({});
                 gtag('event', 'ad_impression', { game_name: 'neon_beat_stage' });
             } catch (e) {
                 console.log('AdSense not loaded yet');
@@ -503,10 +502,6 @@
             gtag('event', 'page_view', { game_name: 'neon_beat_stage' });
             
             // Inicializar anuncios (no bloquea si no carga)
-            try {
-                (adsbygoogle = window.adsbygoogle || []).push({});
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            } catch(e) {}
             hideAds();
             startGame();
         });
@@ -527,12 +522,6 @@
             if (bottom) bottom.style.display = 'flex';
             if (side) side.style.display = 'block';
             if (menu) menu.style.display = 'block';
-            try {
-                (adsbygoogle = window.adsbygoogle || []).push({});
-                (adsbygoogle = window.adsbygoogle || []).push({});
-                (adsbygoogle = window.adsbygoogle || []).push({});
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            } catch(e) {}
         }
         
         function hideAds() {
