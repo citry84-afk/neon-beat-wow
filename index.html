@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Beat WOW - K-pop Rhythm Game</title>
+    <title>Neon Beat WOW - K-pop Warrior Rhythm Game v2.0</title>
     
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-633RQLC6T0"></script>
@@ -20,19 +20,25 @@
             });
         };
         
-        window.trackDonationClick = function() {
+        window.trackDonationClick = function(amount = 'custom') {
             gtag('event', 'donation_click', {
                 source: 'neon_beat_wow',
-                value: 1
+                amount: amount,
+                value: parseFloat(amount) || 1
             });
         };
     </script>
+    
+    <!-- Tone.js para notas limpias en tiempo real -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4837743291717475"
          crossorigin="anonymous"></script>
     <!-- Consent Mode v2 + Banner -->
     <script defer src="/consent.js"></script>
+    <!-- Leaderboard System -->
+    <script src="/leaderboard-global.js"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -96,6 +102,50 @@
             50% { background: rgba(255,255,255,0.4); }
             100% { background: rgba(255,255,255,0); }
         }
+        
+        /* ===== ANIMACIONES K-POP ÉPICAS ===== */
+        @keyframes kpopHeart {
+            0% { transform: translateY(0) scale(0) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-50px) scale(1.2) rotate(180deg); opacity: 1; }
+            100% { transform: translateY(-100px) scale(0.5) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes kpopStar {
+            0% { transform: translateY(0) scale(0) rotate(0deg); opacity: 1; }
+            30% { transform: translateY(-30px) scale(1.5) rotate(120deg); opacity: 1; }
+            100% { transform: translateY(-80px) scale(0.3) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes kpopRay {
+            0% { transform: rotate(var(--rotation)) scale(0); opacity: 1; }
+            50% { transform: rotate(var(--rotation)) scale(1.2); opacity: 0.8; }
+            100% { transform: rotate(var(--rotation)) scale(2) translateY(-100px); opacity: 0; }
+        }
+        
+        @keyframes kpopWave {
+            0% { transform: translate(-50%, 50%) scale(0); opacity: 1; }
+            50% { transform: translate(-50%, 50%) scale(1); opacity: 0.8; }
+            100% { transform: translate(-50%, 50%) scale(3); opacity: 0; }
+        }
+        
+        @keyframes kpopLaneFlash {
+            0% { background: rgba(255,0,128,0); box-shadow: none; }
+            25% { background: rgba(255,0,128,0.3); box-shadow: 0 0 20px #FF0080; }
+            50% { background: rgba(0,255,255,0.3); box-shadow: 0 0 30px #00FFFF; }
+            75% { background: rgba(255,255,0,0.3); box-shadow: 0 0 20px #FFFF00; }
+            100% { background: rgba(255,0,128,0); box-shadow: none; }
+        }
+        
+        @keyframes kpopRain {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes kpopConfetti {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            50% { transform: translateY(-50px) rotate(180deg) scale(1.2); opacity: 0.8; }
+            100% { transform: translateY(-100px) rotate(360deg) scale(0.5); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -120,8 +170,15 @@
         <div class="score" id="score">SCORE: 0</div>
         <div class="lives" id="lives">❤️ 3</div>
         <div class="combo" id="combo">COMBO: 0</div>
-        <div class="combo" style="color:#FF0080">WOW MODE</div>
-        <button id="musicBtn" style="background:#FF0080;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:900;cursor:pointer">🎵 MUSIC ON</button>
+        <div class="combo" id="speed" style="color:#00FF00">SPEED: 1.0x</div>
+        <div class="combo" style="color:#FF0080">K-POP WARRIOR</div>
+        <div id="audioControls" style="display:flex; gap:8px; align-items:center;">
+            <span style="background:#333;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:900;">🔊 AUDIO</span>
+            <select id="audioMode" style="background:#111;color:#fff;border:1px solid #00FFFF;border-radius:8px;padding:6px 10px;">
+                <option value="only_hits" selected>Only Hits</option>
+                <option value="silent">Silent</option>
+            </select>
+        </div>
     </div>
     
     <!-- Banner en header del juego -->
@@ -139,55 +196,80 @@
         <div class="hit-line"></div>
     </div>
     <script>
-        let gameState = { score: 0, combo: 0, maxCombo: 0, lives: 3, notes: [], gameActive: true, frameCount: 0, perfectHits: 0, goodHits: 0 };
-        let audioContext = null;
-        let backgroundMusic = null;
-
-        function initAudio() {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                console.log("🎵 Audio initialized");
-            } catch (e) {
-                console.log("Audio not supported");
-            }
-        }
-
-        function playSound(frequency, duration, type = "sine", volume = 0.3) {
-            if (!audioContext) return;
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-            oscillator.type = type;
-            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
-        }
-
-        function startKPopBeat() {
-            if (!audioContext) return;
-            let beatCount = 0;
-            const kpopFreqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-            backgroundMusic = setInterval(() => {
-                if (gameState.gameActive) {
-                    // WOW: patrón más rápido con clap
-                    playSound(130.81, 0.08, "sawtooth", 0.16); // kick
-                    if (beatCount % 2 === 0) playSound(523.25, 0.05, "square", 0.08); // clap
-                    if (beatCount % 2 === 0) playSound(kpopFreqs[beatCount % 4], 0.18, "sine", 0.1);
-                    beatCount++;
+        let gameState = { 
+            score: 0, combo: 0, maxCombo: 0, lives: 3, notes: [], gameActive: true, 
+            frameCount: 0, perfectHits: 0, goodHits: 0, 
+            speed: 1.0, // Velocidad base
+            speedMultiplier: 1.0, // Multiplicador de velocidad
+            gameStartTime: 0, // Tiempo de inicio del juego
+            lastHitTime: 0, // Para crear ritmo
+            rhythmPattern: [] // Patrón de ritmo K-pop
+        };
+        // Audio Engine (Web Audio nativo) - SOLO notas en hit, sin fondo
+        const audioEngine = {
+            initialized: false,
+            mode: 'only_hits', // 'silent' | 'only_hits'
+            ctx: null,
+            masterGain: null,
+            // Frecuencias por lane: A4, C5, E5, G5
+            freqByLane: [440.0, 523.25, 659.25, 783.99],
+            async init() {
+                if (this.initialized) return;
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.gain.value = 0; // mudo por defecto
+                    this.masterGain.connect(this.ctx.destination);
+                    this.initialized = true;
+                    console.log('🔊 WebAudio inicializado (solo hits)');
+                } catch(e) {
+                    console.warn('Audio init error', e);
                 }
-            }, 380);
-        }        
+            },
+            async ensureStarted() {
+                if (!this.initialized) await this.init();
+                if (this.ctx && this.ctx.state !== 'running') await this.ctx.resume();
+            },
+            setMode(newMode) {
+                this.mode = newMode;
+                if (newMode === 'silent') {
+                    if (this.masterGain) this.masterGain.gain.value = 0;
+                    if (this.ctx && this.ctx.state === 'running') this.ctx.suspend();
+                }
+            },
+            async playLane(lane) {
+                if (this.mode === 'silent') return;
+                await this.ensureStarted();
+                const f = this.freqByLane[lane % this.freqByLane.length];
+                const osc = this.ctx.createOscillator();
+                const env = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = f;
+                env.gain.setValueAtTime(0, this.ctx.currentTime);
+                env.gain.linearRampToValueAtTime(0.9, this.ctx.currentTime + 0.005);
+                env.gain.linearRampToValueAtTime(0.0, this.ctx.currentTime + 0.12);
+                osc.connect(env);
+                env.connect(this.masterGain);
+                this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.14);
+                // Suspender el contexto poco después para asegurar silencio total
+                setTimeout(() => { if (this.mode !== 'silent' && this.ctx) { this.masterGain.gain.value = 0; this.ctx.suspend(); } }, 180);
+            }
+        };
+
+        // Función eliminada - ahora solo usamos el MusicEngine        
         function startGame() {
-            console.log('🎮 STARTING NEON BEAT STAGE');
+            console.log('🎮 STARTING NEON BEAT WOW');
             
             // Track game start
             gtag('event', 'game_start', { game_name: 'neon_beat_wow' });
             
             gameState.gameActive = true;
             gameState.frameCount = 0;
+            gameState.speed = 1.0;
+            gameState.speedMultiplier = 1.0;
+            gameState.gameStartTime = Date.now();
             
             // Reset banner strategy
             bannerShown = false;
@@ -196,10 +278,7 @@
             updateUI();
             gameLoop();
             setupControls();
-            initAudio();
-            startKPopBeat();
-            if (!musicEngine) musicEngine = new MusicEngine();
-            musicEngine.start();
+            // SIN AUDIO - JUEGO COMPLETAMENTE SILENCIOSO
             hideAds();
             console.log('✅ Game started successfully');
         }
@@ -207,8 +286,18 @@
         function gameLoop() {
             if (!gameState.gameActive) return;
             gameState.frameCount++;
-            // WOW: más notas
-            if (gameState.frameCount >= 36) {
+            
+            // Actualizar velocidad cada 10 segundos (600 frames a 60fps)
+            const currentTime = Date.now();
+            const elapsedSeconds = (currentTime - gameState.gameStartTime) / 1000;
+            const newSpeedLevel = Math.floor(elapsedSeconds / 10) + 1;
+            gameState.speedMultiplier = 1.0 + (newSpeedLevel - 1) * 0.3; // +30% cada 10 segundos
+            
+            // Spawn de notas más lento al inicio, más rápido con el tiempo
+            const baseSpawnRate = 60; // Frames entre notas (más lento al inicio)
+            const adjustedSpawnRate = Math.max(20, baseSpawnRate - (newSpeedLevel - 1) * 8);
+            
+            if (gameState.frameCount >= adjustedSpawnRate) {
                 spawnNote();
                 gameState.frameCount = 0;
             }
@@ -235,8 +324,10 @@
         
         function moveNotes() {
             gameState.notes.forEach((note, index) => {
-            // WOW: mayor velocidad de caída
-            note.y += 6.5;
+                // Velocidad de caída progresiva
+                const baseSpeed = 3.0; // Velocidad base más lenta
+                const currentSpeed = baseSpeed * gameState.speedMultiplier;
+                note.y += currentSpeed;
                 note.element.style.top = note.y + 'px';
                 if (note.y > window.innerHeight) {
                     note.element.remove();
@@ -296,8 +387,11 @@
                     setTimeout(() => document.body.classList.remove("screen-shake"), 300);
                 }
                 
-                // Sonido con pitch según combo
-                playSound(523.25 + lane * 100 + gameState.combo * 6, 0.3, "sine", 0.25);
+                // AUDIO: nota limpia por lane (Only Hits / Backing+Hits)
+                audioEngine.playLane(lane);
+                // EFECTOS VISUALES K-POP ÉPICOS
+                console.log('🎵 Creando efectos K-pop para lane', lane, 'tipo', hitType, 'combo', gameState.combo);
+                createKPopEffect(lane, hitType, gameState.combo);
             } else {
                 gameState.combo = 0;
                 console.log(`❌ MISS on lane ${lane}`);
@@ -365,6 +459,10 @@
             const comboElement = document.getElementById("combo");
             comboElement.textContent = `COMBO: ${gameState.combo}`;
             
+            // Actualizar indicador de velocidad
+            const speedElement = document.getElementById("speed");
+            speedElement.textContent = `SPEED: ${gameState.speedMultiplier.toFixed(1)}x`;
+            
             // Color dinámico del combo
             if (gameState.combo >= 50) {
                 comboElement.style.color = "#FF0080";
@@ -383,18 +481,49 @@
                 comboElement.style.textShadow = "none";
                 comboElement.style.animation = "none";
             }
+            
+            // Color dinámico de la velocidad
+            if (gameState.speedMultiplier >= 2.0) {
+                speedElement.style.color = "#FF0080";
+                speedElement.style.textShadow = "0 0 10px #FF0080";
+            } else if (gameState.speedMultiplier >= 1.5) {
+                speedElement.style.color = "#FFFF00";
+                speedElement.style.textShadow = "0 0 5px #FFFF00";
+            } else {
+                speedElement.style.color = "#00FF00";
+                speedElement.style.textShadow = "none";
+            }
         }        
         // CONTADOR DE PARTIDAS PARA ESTRATEGIA INTELIGENTE
         let gamesPlayed = 0;
         let lastInterstitialTime = 0;
         
+        // ===== LEADERBOARD FUNCTIONS =====
+        let leaderboard;
+        
+        function showLeaderboard(gameId) {
+            if (window.showLeaderboard && typeof window.showLeaderboard === 'function') {
+                window.showLeaderboard(gameId || 'neon-beat-wow');
+            }
+        }
+        
+        function hideLeaderboard() {
+            const modal = document.querySelector('[style*="position: fixed"]');
+            if (modal) modal.remove();
+        }
+        
         function gameOver() {
             gameState.gameActive = false;
             console.log("💀 GAME OVER");
-            try { if (musicEngine) musicEngine.softDrop(); } catch(_) {}
+            // Sin música de fondo que parar
             
             gamesPlayed++;
             const currentTime = Date.now();
+            
+            // Submit score to leaderboard
+            if (leaderboard) {
+                leaderboard.submitScore(gameState.score, Math.floor(gameState.score / 1000) + 1, gameState.combo);
+            }
             
             // Track game over
             gtag('event', 'game_over', { 
@@ -423,7 +552,7 @@
         function showViralGameOverScreen() {
             const modal = document.createElement("div");
             modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000;";
-            modal.innerHTML = `<div style="background: linear-gradient(145deg, #1a1a2e, #16213e); padding: 30px; border-radius: 20px; text-align: center; border: 3px solid #00FFFF; box-shadow: 0 0 30px #FF0080; max-width: 90%;"><h2 style="color: #FF0080; margin: 20px 0;">🎮 GAME OVER! 🎮</h2><div style="margin: 20px 0; color: white;"><p>🎯 Score: ${gameState.score}</p><p>🔥 Max Combo: ${gameState.combo}</p><p>✨ Notes Hit: ${Math.floor(gameState.score / 100)}</p></div><button onclick="shareNeonBeat()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF0080, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📱 SHARE SCORE</button><button onclick="copyNeonBeatMessage()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FFFF00, #FF0080); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📋 COPY MESSAGE</button><a href="https://paypal.me/lipastudios" target="_blank" onclick="trackDonationClick()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #ff6600, #ffff00); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px; text-decoration:none; display:block; text-align:center;">💖 ¡Apoya el juego!</a><button onclick="watchAdToContinue(event)" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF6600, #FFFF00); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🎬 WATCH AD TO CONTINUE</button><button onclick="restartGame()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #8A2BE2, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🔄 NEW GAME</button>
+            modal.innerHTML = `<div style="background: linear-gradient(145deg, #1a1a2e, #16213e); padding: 30px; border-radius: 20px; text-align: center; border: 3px solid #00FFFF; box-shadow: 0 0 30px #FF0080; max-width: 90%;"><h2 style="color: #FF0080; margin: 20px 0;">🎮 GAME OVER! 🎮</h2><div style="margin: 20px 0; color: white;"><p>🎯 Score: ${gameState.score}</p><p>🔥 Max Combo: ${gameState.combo}</p><p>✨ Notes Hit: ${Math.floor(gameState.score / 100)}</p></div><button onclick="showLeaderboard('neon-beat-wow')" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FFD700, #FFA500); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🏆 RANKING</button><button onclick="shareNeonBeat()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF0080, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📱 SHARE SCORE</button><button onclick="copyNeonBeatMessage()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FFFF00, #FF0080); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">📋 COPY MESSAGE</button><div style="margin: 20px 0;"><h3 style="color: #FFFF00; margin-bottom: 15px;">💖 ¡Apoya el desarrollo!</h3><div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;"><a href="https://paypal.me/lipastudios/0.50" target="_blank" onclick="trackDonationClick('0.50')" style="padding: 12px 20px; background: linear-gradient(45deg, #4CAF50, #8BC34A); color: white; font-weight: bold; border-radius: 8px; text-decoration: none; font-size: 14px;">☕ 0,50€</a><a href="https://paypal.me/lipastudios/2.00" target="_blank" onclick="trackDonationClick('2.00')" style="padding: 12px 20px; background: linear-gradient(45deg, #FF9800, #FFC107); color: white; font-weight: bold; border-radius: 8px; text-decoration: none; font-size: 14px;">🍕 2€</a><a href="https://paypal.me/lipastudios/5.00" target="_blank" onclick="trackDonationClick('5.00')" style="padding: 12px 20px; background: linear-gradient(45deg, #E91E63, #F06292); color: white; font-weight: bold; border-radius: 8px; text-decoration: none; font-size: 14px;">🎮 5€</a></div></div><button onclick="watchAdToContinue(event)" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #FF6600, #FFFF00); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🎬 WATCH AD TO CONTINUE</button><button onclick="restartGame()" style="width:100%; margin:10px 0; padding:15px; background: linear-gradient(45deg, #8A2BE2, #00FFFF); border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:16px;">🔄 NEW GAME</button>
             
             <!-- Interstitial Ad Container -->
             <div id="gameOverAd" style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid #00FFFF; border-radius: 8px;">
@@ -539,16 +668,38 @@
             // Track page view
             gtag('event', 'page_view', { game_name: 'neon_beat_wow' });
             
+            // Initialize leaderboard
+            setTimeout(() => {
+                leaderboard = new GlobalLeaderboard('neon-beat-wow');
+            }, 100);
+            
             // Inicializar anuncios (no bloquea si no carga)
             hideAds();
             startGame();
 
-            // Music toggle
-            const mbtn = document.getElementById('musicBtn');
-            mbtn.addEventListener('click', () => {
-                if (!musicEngine) return;
-                musicEngine.toggle();
-                mbtn.textContent = musicEngine.enabled ? '🎵 MUSIC ON' : '🔇 MUSIC OFF';
+            // Audio: iniciar tras primer interacción (requisito mobile)
+            const prime = async () => { document.removeEventListener('click', prime); document.removeEventListener('touchstart', prime); await audioEngine.init(); };
+            document.addEventListener('click', prime, { passive: true });
+            document.addEventListener('touchstart', prime, { passive: true });
+
+            // Control de modo de audio
+            const modeSel = document.getElementById('audioMode');
+            if (modeSel) {
+                modeSel.addEventListener('change', (e) => {
+                    audioEngine.setMode(e.target.value);
+                    const modeLabel = e.target.value.replace('_',' ').toUpperCase();
+                    showNotification(`🔊 AUDIO: ${modeLabel}`);
+                    gtag('event', 'audio_mode_change', { mode: e.target.value });
+                });
+                // Forzar Only Hits por defecto
+                audioEngine.setMode(modeSel.value);
+            }
+
+            // Seguridad: si la pestaña pierde foco o se oculta, aseguramos silencio
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && audioEngine.gain) {
+                    audioEngine.gain.gain.rampTo(0, 0.02);
+                }
             });
         });
 
@@ -597,95 +748,142 @@
             return;
         }
 
-        // ====== K-POP WOW MUSIC ENGINE (WebAudio) ======
-        class MusicEngine {
-            constructor(){
-                this.ctx = null;
-                this.enabled = true;
-                this.bpm = 158; // energetic K-pop
-                this.sixteenth = 60/this.bpm/4;
-                this.master = null;
-                this.fxDelay = null;
-                this.fxGain = null;
-                this.isRunning = false;
-                this.nextTime = 0;
-                this.step = 0;
-                this.progression = [0,7,9,5]; // i V VI III in A minor feel
-                this.scale = [0,2,3,5,7,9,10,12];
-                this.hook = [0,2,3,7,5,3,2,0, 0,2,3,7,10,9,7]; // singable
-            }
-            _init(){
-                if (this.ctx) return;
-                this.ctx = new (window.AudioContext||window.webkitAudioContext)();
-                this.master = this.ctx.createGain();
-                this.master.gain.value = 0.25;
-                this.fxDelay = this.ctx.createDelay(0.5);
-                this.fxDelay.delayTime.value = 0.22;
-                this.fxGain = this.ctx.createGain();
-                this.fxGain.gain.value = 0.18;
-                this.fxDelay.connect(this.fxGain);
-                this.fxGain.connect(this.master);
-                this.master.connect(this.ctx.destination);
-            }
-            start(){
-                if (!this.enabled) return;
-                this._init();
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-                this.isRunning = true;
-                this.nextTime = this.ctx.currentTime + 0.05;
-                this.step = 0;
-                this._scheduler();
-            }
-            stop(){ this.isRunning = false; }
-            toggle(){ this.enabled = !this.enabled; if (this.enabled) this.start(); else this.stop(); }
-            softDrop(){ if (this.master) this.master.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+0.8); }
-            _scheduler(){
-                if (!this.isRunning) return;
-                while (this.nextTime < this.ctx.currentTime + 0.1){
-                    this._scheduleStep(this.step, this.nextTime);
-                    this.nextTime += this.sixteenth;
-                    this.step = (this.step + 1) % 256;
-                }
-                setTimeout(()=>this._scheduler(), 25);
-            }
-            _scheduleStep(step, t){
-                // Drums: kick on 1&3, snare on 2&4, hats 1/8
-                const beat = step % 16;
-                if (beat===0 || beat===8) this._kick(t);
-                if (beat===4 || beat===12) this._snare(t);
-                if (beat%2===0) this._hat(t, 0.5);
-                
-                // Bass: root notes per bar (every 16 steps)
-                if (beat===0){
-                    const bar = Math.floor(step/16);
-                    const deg = this.progression[bar%this.progression.length];
-                    this._bass(t, 45+deg); // around A2 base
-                }
-                // Lead hook every 2 bars
-                const bar2 = Math.floor(step/32);
-                if (bar2%2===0 && beat%2===0){
-                    const idx = (Math.floor(step/2)%this.hook.length);
-                    const semis = this.hook[idx];
-                    this._lead(t, 69+semis); // A4 as tonic
-                }
-                // Chords stabs on offbeats
-                if (beat===2 || beat===10){
-                    const bar = Math.floor(step/16);
-                    const deg = this.progression[bar%this.progression.length];
-                    this._chord(t, 57+deg); // A3 area
+        // ===== EFECTOS VISUALES K-POP ÉPICOS =====
+        function createKPopEffect(lane, hitType, combo) {
+            const gameArea = document.getElementById('gameArea');
+            const laneElement = document.querySelector(`[data-lane="${lane}"]`);
+            const hitLineY = window.innerHeight - 160;
+            
+            // 1. EXPLOSIÓN DE CORAZONES K-POP
+            if (hitType === "PERFECT") {
+                for (let i = 0; i < 15; i++) {
+                    const heart = document.createElement('div');
+                    heart.innerHTML = '💖';
+                    heart.style.cssText = `
+                        position: absolute;
+                        font-size: 24px;
+                        left: ${lane * 25 + 12.5}%;
+                        bottom: ${hitLineY}px;
+                        pointer-events: none;
+                        z-index: 50;
+                        animation: kpopHeart 1.5s ease-out forwards;
+                    `;
+                    gameArea.appendChild(heart);
+                    setTimeout(() => heart.remove(), 1500);
                 }
             }
-            _kick(t){ const o=this.ctx.createOscillator(); const g=this.ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(45,t+0.09); g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.11); o.connect(g); g.connect(this.master); o.start(t); o.stop(t+0.12); }
-            _snare(t){ const noise=this._whiteNoise(); const bp=this.ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1800; const g=this.ctx.createGain(); g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.12); noise.connect(bp); bp.connect(g); g.connect(this.master); g.connect(this.fxDelay); noise.start(t); noise.stop(t+0.13); }
-            _hat(t, vol){ const noise=this._whiteNoise(); const hp=this.ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=5000; const g=this.ctx.createGain(); g.gain.setValueAtTime(0.25*vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.04); noise.connect(hp); hp.connect(g); g.connect(this.master); noise.start(t); noise.stop(t+0.05); }
-            _bass(t, midi){ this._monoSynth(t, midi, 0.18, 'sawtooth', 0.28, 0.08); }
-            _lead(t, midi){ this._monoSynth(t, midi, 0.22, 'square', 0.16, 0.12, true); }
-            _chord(t, rootMidi){ const tones=[0,3,7].map(s=>this._freq(rootMidi+s)); tones.forEach((f,i)=>{ const o=this.ctx.createOscillator(); const g=this.ctx.createGain(); o.type='triangle'; o.frequency.value=f; g.gain.setValueAtTime(0.12,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.18); o.connect(g); g.connect(this.master); g.connect(this.fxDelay); o.start(t); o.stop(t+0.2); }); }
-            _monoSynth(t, midi, vol, type, a=0.02, d=0.1, delay=false){ const o=this.ctx.createOscillator(); const g=this.ctx.createGain(); o.type=type; o.frequency.value=this._freq(midi); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+a); g.gain.exponentialRampToValueAtTime(0.001,t+a+d); o.connect(g); g.connect(this.master); if(delay) g.connect(this.fxDelay); o.start(t); o.stop(t+a+d+0.05); }
-            _whiteNoise(){ const buf=this.ctx.createBuffer(1, this.ctx.sampleRate*0.2, this.ctx.sampleRate); const data=buf.getChannelData(0); for(let i=0;i<data.length;i++) data[i]=Math.random()*2-1; const src=this.ctx.createBufferSource(); src.buffer=buf; return src; }
-            _freq(m){ return 440*Math.pow(2,(m-69)/12); }
+            
+            // 2. ESTRELLAS BRILLANTES
+            for (let i = 0; i < 20; i++) {
+                const star = document.createElement('div');
+                star.innerHTML = '✨';
+                star.style.cssText = `
+                    position: absolute;
+                    font-size: ${16 + Math.random() * 12}px;
+                    left: ${lane * 25 + 12.5 + (Math.random() - 0.5) * 20}%;
+                    bottom: ${hitLineY + (Math.random() - 0.5) * 40}px;
+                    pointer-events: none;
+                    z-index: 45;
+                    animation: kpopStar 2s ease-out forwards;
+                `;
+                gameArea.appendChild(star);
+                setTimeout(() => star.remove(), 2000);
+            }
+            
+            // 3. RAYOS DE ENERGÍA
+            for (let i = 0; i < 8; i++) {
+                const ray = document.createElement('div');
+                ray.style.cssText = `
+                    position: absolute;
+                    width: 3px;
+                    height: 60px;
+                    background: linear-gradient(45deg, #FF0080, #00FFFF, #FFFF00);
+                    left: ${lane * 25 + 12.5}%;
+                    bottom: ${hitLineY}px;
+                    pointer-events: none;
+                    z-index: 40;
+                    transform-origin: bottom center;
+                    transform: rotate(${i * 45}deg);
+                    animation: kpopRay 0.8s ease-out forwards;
+                `;
+                gameArea.appendChild(ray);
+                setTimeout(() => ray.remove(), 800);
+            }
+            
+            // 4. ONDAS DE CHOQUE
+            for (let i = 0; i < 3; i++) {
+                const wave = document.createElement('div');
+                wave.style.cssText = `
+                    position: absolute;
+                    width: 100px;
+                    height: 100px;
+                    border: 3px solid #FF0080;
+                    border-radius: 50%;
+                    left: ${lane * 25 + 12.5}%;
+                    bottom: ${hitLineY}px;
+                    pointer-events: none;
+                    z-index: 35;
+                    transform: translate(-50%, 50%);
+                    animation: kpopWave ${0.6 + i * 0.2}s ease-out forwards;
+                `;
+                gameArea.appendChild(wave);
+                setTimeout(() => wave.remove(), 1000);
+            }
+            
+            // 5. FLASH DE LANE ESTILO K-POP
+            laneElement.style.animation = 'kpopLaneFlash 0.3s ease-out';
+            setTimeout(() => {
+                laneElement.style.animation = '';
+            }, 300);
+            
+            // 6. EFECTOS ESPECIALES EN COMBOS ALTOS
+            if (combo > 10) {
+                createComboEffect(lane, combo);
+            }
         }
-        let musicEngine = null;
+        
+        function createComboEffect(lane, combo) {
+            const gameArea = document.getElementById('gameArea');
+            const hitLineY = window.innerHeight - 160;
+            
+            // LLUVIA DE CORAZONES
+            if (combo > 20) {
+                for (let i = 0; i < 25; i++) {
+                    const heart = document.createElement('div');
+                    heart.innerHTML = '💕';
+                    heart.style.cssText = `
+                        position: absolute;
+                        font-size: 20px;
+                        left: ${Math.random() * 100}%;
+                        top: -50px;
+                        pointer-events: none;
+                        z-index: 55;
+                        animation: kpopRain 3s linear forwards;
+                    `;
+                    gameArea.appendChild(heart);
+                    setTimeout(() => heart.remove(), 3000);
+                }
+            }
+            
+            // EXPLOSIÓN DE CONFETTI
+            if (combo > 30) {
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.innerHTML = ['🎉', '🎊', '✨', '💫'][Math.floor(Math.random() * 4)];
+                    confetti.style.cssText = `
+                        position: absolute;
+                        font-size: 16px;
+                        left: ${lane * 25 + 12.5}%;
+                        bottom: ${hitLineY}px;
+                        pointer-events: none;
+                        z-index: 60;
+                        animation: kpopConfetti 2s ease-out forwards;
+                    `;
+                    gameArea.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 2000);
+                }
+            }
+        }
     </script>
 </body>
 </html>
